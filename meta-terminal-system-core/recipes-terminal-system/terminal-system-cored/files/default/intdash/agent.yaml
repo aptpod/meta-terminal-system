@@ -1,0 +1,33 @@
+connection:
+  server_url: https://xxxxx.intdash.jp
+  project_uuid: 00000000-0000-0000-0000-000000000000
+  edge_uuid: 00000000-0000-0000-0000-000000000000
+  client_secret: ""
+transport:
+  protocol: websocket
+upstream:
+- id: default-upstream
+  enabled: true
+  recover: true
+  persist: true
+  qos: unreliable
+  flush_policy: interval
+  flush_interval: 5
+downstream: []
+device_connectors_upstream:
+- id: device-inventory
+  data_name_prefix: 255/
+  dest_ids:
+  - default-upstream
+  enabled: true
+  format: iscp-v2-compat
+  ipc:
+    type: fifo
+    path: /var/run/intdash/up-device-inventory.fifo
+device_connectors_downstream: []
+filters_upstream: []
+filters_downstream: []
+deferred_upload:
+  priority: same_as_realtime
+  limit_data_storage: true
+  data_storage_capacity: 102400

@@ -1,0 +1,46 @@
+#!/bin/bash
+
+# Report inventory of Terminal System Core API
+
+set -u
+
+ADDR="${TEST_COREAPI_ADDR:-localhost}"
+PORT=${TEST_COREAPI_PORT:-8081}
+BASE_URL="http://${ADDR}:${PORT}/api"
+
+declare -A API_LIST=(
+    ["network_devices"]="/network_devices"
+    ["gsm_band_presets"]="/gsm_band_presets"
+    ["terminal_system"]="/terminal_system"
+    ["agent.connection.state"]="/agent/connection/state"
+    ["agent.upstreams.state"]="/agent/upstreams/-/state"
+    ["agent.downstreams.state"]="/agent/downstreams/-/state"
+    ["agent.deferred_upload.state"]="/agent/deferred_upload/state"
+    ["agent.measurements"]="/agent/measurements"
+    ["agent.device_connectors_upstream.state"]="/agent/device_connectors_upstream/-/state"
+    ["agent.device_connectors_downstream.state"]="/agent/device_connectors_downstream/-/state"
+    ["device_connector_services"]="/device_connector_services"
+    ["docker.images"]="/docker/images"
+    ["docker.containers"]="/docker/containers"
+)
+
+exit_code=0
+
+function get_content_from_list() {
+    local -n api_list=$1
+
+    for key in "${!api_list[@]}"; do
+        endpoint="${api_list[${key}]}"
+        content="$(curl -fsL "${BASE_URL}${endpoint}" | jq -c)"
+
+        if [ -n "${content}" ]; then
+            echo "${key}=${content}"
+        else
+            exit_code=1
+        fi
+    done
+}
+
+get_content_from_list API_LIST
+
+exit ${exit_code}

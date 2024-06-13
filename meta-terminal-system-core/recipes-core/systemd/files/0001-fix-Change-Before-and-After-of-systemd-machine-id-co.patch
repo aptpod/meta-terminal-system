@@ -1,0 +1,29 @@
+From 08ad4ac9e24ed8ddd309af28699832bd30480cdf Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Fri, 20 Oct 2023 10:21:05 +0900
+Subject: [PATCH] fix: Change Before and After of systemd-machine-id-commit.service
+ Terminal System 2 does not work correctly when committing after localfs.target because /etc is overlayfs.
+ Change the condition to commit before mounting /etc as overlayfs.
+
+---
+ units/systemd-machine-id-commit.service | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/units/systemd-machine-id-commit.service b/units/systemd-machine-id-commit.service
+index 89e0613955..6c144de2e5 100644
+--- a/units/systemd-machine-id-commit.service
++++ b/units/systemd-machine-id-commit.service
+@@ -12,8 +12,8 @@ Description=Commit a transient machine-id on disk
+ Documentation=man:systemd-machine-id-commit.service(8)
+ DefaultDependencies=no
+ Conflicts=shutdown.target
+-Before=shutdown.target
+-After=local-fs.target first-boot-complete.target
++Before=etc.mount shutdown.target
++After=local-fs-pre.target first-boot-complete.target
+ ConditionPathIsReadWrite=/etc
+ ConditionPathIsMountPoint=/etc/machine-id
+ 
+-- 
+2.25.1
+

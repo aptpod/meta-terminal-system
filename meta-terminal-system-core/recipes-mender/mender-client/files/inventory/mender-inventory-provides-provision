@@ -1,0 +1,14 @@
+#!/bin/sh
+
+# Report software version of provisioned devices
+
+set -e
+
+MENDER_ARTIFACT_NAME="@MENDER_ARTIFACT_NAME@"
+PROVIDES="$(mender show-provides 2>/dev/null | grep rootfs-image.version || true)"
+
+if [ -z "${PROVIDES}" ]; then
+    echo "rootfs-image.version=${MENDER_ARTIFACT_NAME}"
+fi
+
+exit 0

@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# Report inventory of device-inventory tool
+
+set -u
+
+TIMEOUT=10
+
+# Command List
+declare -A DEVICE_INVENTORY_LIST_COMMAND=(
+    ["vcgencmd"]="--vcgencmd"
+)
+
+function get_content_from_list() {
+    local -n api_list=$1
+    local -r key_prefix=$2
+
+    for key in "${!api_list[@]}"; do
+        arg="${api_list[${key}]}"
+        content="$(timeout ${TIMEOUT} bash -c "device-inventory ${arg} | jq -c .${key}")"
+
+        if [ -n "${content}" ]; then
+            echo "${key_prefix}${key}=${content}"
+        fi
+    done
+}
+
+get_content_from_list DEVICE_INVENTORY_LIST_COMMAND "command."
+
+exit 0

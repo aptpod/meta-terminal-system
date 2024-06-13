@@ -1,0 +1,124 @@
+--- driver/Makefile.orig	2022-09-29 22:24:53.000000000 +0900
++++ driver/Makefile	2023-01-13 12:15:22.270104424 +0900
+@@ -113,92 +113,8 @@
+ #
+ # please modify only here if your kernel path is elsewhere located
+ #
+-KERNEL_LOCATION = $(DKMS_KERNEL_DIR)
+-
+-#
+-# probe various standard kernel locations
+-#
+-ifeq ($(KERNEL_LOCATION),)
+-define KERNEL_LOCATION_1
+-$(shell UR=`uname -r`; for d in \
+-	/usr/src/linux-headers-$$UR \
+-	/usr/src/linux-$$UR \
+-	/lib/modules/$$UR/build \
+-	/usr/src/linux \
+-	; do if [ -d $$d ]; then echo $$d; break; fi; done)
+-endef
+-ifeq ($(KERNEL_LOCATION_1),)
+-$(error "Unable to automatically find the Kernel headers.\
+-These are mandatory to build the pcan driver. Please set the KERNEL_LOCATION\
+-variable to the root directory of your own built Kernel.")
+-else
+-KERNEL_LOCATION = $(KERNEL_LOCATION_1)
+-endif
+-endif
+-
+-#
+-# Get Linux OS release
+-#
+--include $(DESTDIR)/etc/os-release
+-OS_RELEASE_ID = $(NAME)
+-ifeq ($(OS_RELEASE_ID),)
+-OS_RELEASE_ID = UNKNOWN_LINUX
+-endif
+-OS_RELEASE_VER = $(VERSION_ID)
+-ifeq ($(OS_RELEASE_VER),)
+-OS_RELEASE_VER = X.Y.Z
+-endif
+-
+-#
+-# determine where to find the kernel built header files
+-#
+-define HEADER_PATH
+-$(shell if [ -d $(KERNEL_LOCATION)/include/generated ]; then \
+-		echo "$(KERNEL_LOCATION)/include/generated"; \
+-	else \
+-		echo "$(KERNEL_LOCATION)/include/linux"; \
+-	fi)
+-endef
+-
+-#
+-# whole makefile is based on availability of version.h file
+-# do a forced stop if it is not available
+-#
+-# >= 3.7: linux/version.h no more in include but in include/generated/uapi
+-#
+-define VERSION_H_DIR
+-$(shell if [ -d $(HEADER_PATH)/uapi ]; then \
+-		echo "$(HEADER_PATH)/uapi"; \
+-	else \
+-		echo "$(KERNEL_LOCATION)/include"; \
+-	fi)
+-endef
+-
+-HASVERSION_H = $(shell [ -f $(VERSION_H_DIR)/linux/version.h ] && echo yes)
+-
+-ifneq ($(HASVERSION_H),yes)
+-#$(error "Can't find $(VERSION_H_DIR)/linux/version.h")
+-KERNEL_VERSION := $(shell uname -r)
+-else
+-
+-#
+-# removed old version retrival for better cross compile support
+-# old KERNEL_VERSION := $(shell uname -r)
+-#
+-KERNEL_VERSION := $(shell cpp -E -dM -I$(KERNEL_LOCATION)/include \
+-                              $(VERSION_H_DIR)/linux/version.h | \
+-                              grep UTS_RELEASE | sed -e 's;[^"]*"\(.*\)";\1;g')
+-
+-ifeq ($(KERNEL_VERSION),)
+-KERNEL_VERSION := $(shell cpp -E -dM -I$(KERNEL_LOCATION)/include \
+-                              $(HEADER_PATH)/utsrelease.h | \
+-                              grep UTS_RELEASE | sed -e 's;[^"]*"\(.*\)";\1;g')
+-endif
+-endif
+-
+-ifeq ($(KERNEL_VERSION),)
+-$(error "Unable to read Kernel version string from $(KERNEL_LOCATION)")
+-endif
++KERNEL_LOCATION = $(KERNEL_SRC)
++VERSION = $(KERNEL_VERSION)
+ 
+ #
+ # where the driver should be installed - change here for cross install
+@@ -497,7 +413,7 @@
+ # checking endianess needs 'sparse' tool (apt-get install sparse)
+ #CMD_OPTS = C=1 CF=-D__CHECK_ENDIAN__
+ 
+-CMDLINE = $(MAKE) -C $(KERNEL_LOCATION) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) modules
++CMDLINE = $(MAKE) -C $(KERNEL_LOCATION) M=$(PWD) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) modules
+ 
+ #
+ # do it in another way for kernels less than 2.6.5
+@@ -597,6 +513,7 @@
+ # $ make clean
+ clean:
+ 	rm -f $(SRC)/*o $(SRC)/*~ $(SRC)/.*cmd *o *ko *~ .*cmd  $(DRV).mod.c Module.symvers modules.order .cache.mk
++	$(MAKE) -C $(KERNEL_LOCATION) M=$(PWD) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) clean
+ 
+ ifneq ($(USE_KBUILD),yes)
+ # $ make mrproper
+@@ -632,6 +549,8 @@
+ DEPMOD_OPTS += $(KERNEL_VERSION)
+ endif
+ 
++modules_install:
++	$(MAKE) -C $(KERNEL_LOCATION) M=$(PWD) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) modules_install
+ 
+ install: install_files install_udev install_module
+ 
+

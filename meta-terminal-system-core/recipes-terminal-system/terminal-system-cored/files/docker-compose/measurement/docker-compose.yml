@@ -1,0 +1,27 @@
+version: '3.7'
+
+services:
+  intdash-edge-agent2:
+    image: ${BASE_URI}/${IMAGE_NAME_AGENT2}:${IMAGE_TAG_AGENT2}
+    healthcheck:
+      test: pidof intdash-agent-streamer
+      interval: 1s
+      timeout: 1s
+      retries: 1
+      start_period: 10s
+    command: intdash-agentctl run --address system-intdash-edge-agent2-1:50051
+    stop_grace_period: 30s
+    volumes:
+      - /var/run/core/intdash:/var/run/intdash
+      - /var/lib/core/intdash:/var/lib/intdash
+    networks:
+      - intdash
+
+volumes:
+  intdash-lock:
+
+
+networks:
+  intdash:
+    name: system_intdash
+    external: true

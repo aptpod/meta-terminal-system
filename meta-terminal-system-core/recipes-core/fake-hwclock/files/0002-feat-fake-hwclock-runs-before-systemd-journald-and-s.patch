@@ -1,0 +1,28 @@
+From fe95a5c5602a6a980f925ab919d33f24c4c5e92e Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Fri, 20 Oct 2023 14:44:35 +0900
+Subject: [PATCH] feat: fake-hwclock runs before systemd-journald and
+ systemd-update-utmp This change ensures that the system clock is set
+ correctly before journaling begins and user login/logout records are updated,
+ which in turn ensures accurate timestamps in the logs and on user sessions.
+
+---
+ debian/fake-hwclock.service | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/debian/fake-hwclock.service b/debian/fake-hwclock.service
+index be34823..4cd9a40 100644
+--- a/debian/fake-hwclock.service
++++ b/debian/fake-hwclock.service
+@@ -3,7 +3,7 @@ Description=Restore / save the current clock
+ Documentation=man:fake-hwclock(8)
+ DefaultDependencies=no
+ After=local-fs.target
+-Before=sysinit.target shutdown.target
++Before=systemd-journald.service systemd-update-utmp.service sysinit.target shutdown.target
+ Conflicts=shutdown.target
+ 
+ [Service]
+-- 
+2.25.1
+

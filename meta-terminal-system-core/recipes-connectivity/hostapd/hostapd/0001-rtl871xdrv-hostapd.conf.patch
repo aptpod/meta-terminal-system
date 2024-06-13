@@ -1,0 +1,60 @@
+From 744c7e3beca5f50808c496ab1ee6ff64f66bb17a Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Mon, 19 Dec 2022 17:26:02 +0900
+
+---
+ hostapd/hostapd.conf | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/hostapd/hostapd.conf b/hostapd/hostapd.conf
+index 3c2019f..b67567d 100644
+--- a/hostapd/hostapd.conf
++++ b/hostapd/hostapd.conf
+@@ -24,7 +24,7 @@ interface=wlan0
+ # default: hostap). nl80211 is used with all Linux mac80211 drivers.
+ # Use driver=none if building hostapd as a standalone RADIUS server that does
+ # not control any wireless/wired driver.
+-# driver=hostap
++driver=rtl871xdrv
+ 
+ # Driver interface parameters (mainly for development testing use)
+ # driver_params=<params>
+@@ -1622,7 +1622,7 @@ own_ip_addr=127.0.0.1
+ # Note that WPA3 is also configured with bit1 since it uses RSN just like WPA2.
+ # In other words, for WPA3, wpa=2 is used the configuration (and
+ # wpa_key_mgmt=SAE for WPA3-Personal instead of wpa_key_mgmt=WPA-PSK).
+-#wpa=2
++wpa=2
+ 
+ # Extended Key ID support for Individually Addressed frames
+ #
+@@ -1642,7 +1642,7 @@ own_ip_addr=127.0.0.1
+ # wpa_psk (dot11RSNAConfigPSKValue)
+ # wpa_passphrase (dot11RSNAConfigPSKPassPhrase)
+ #wpa_psk=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+-#wpa_passphrase=secret passphrase
++wpa_passphrase=passphrase
+ 
+ # Optionally, WPA PSKs can be read from a separate text file (containing list
+ # of (PSK,MAC address) pairs. This allows more than one PSK to be configured.
+@@ -1680,7 +1680,7 @@ own_ip_addr=127.0.0.1
+ # DPP = Device Provisioning Protocol
+ # OSEN = Hotspot 2.0 online signup with encryption
+ # (dot11RSNAConfigAuthenticationSuitesTable)
+-#wpa_key_mgmt=WPA-PSK WPA-EAP
++wpa_key_mgmt=WPA-PSK
+ 
+ # Set of accepted cipher suites (encryption algorithms) for pairwise keys
+ # (unicast packets). This is a space separated list of algorithms:
+@@ -1697,9 +1697,9 @@ own_ip_addr=127.0.0.1
+ #
+ # (dot11RSNAConfigPairwiseCiphersTable)
+ # Pairwise cipher for WPA (v1) (default: TKIP)
+-#wpa_pairwise=TKIP CCMP
++wpa_pairwise=TKIP
+ # Pairwise cipher for RSN/WPA2 (default: use wpa_pairwise value)
+-#rsn_pairwise=CCMP
++rsn_pairwise=CCMP
+ 
+ # Optional override for automatic group cipher selection
+ # This can be used to select a specific group cipher regardless of which

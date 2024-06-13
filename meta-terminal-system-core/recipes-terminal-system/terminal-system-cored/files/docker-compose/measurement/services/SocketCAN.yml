@@ -1,0 +1,184 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+network_mode: host
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+command:
+    - --config
+    - "/etc/dc_conf/socketcan.yml"
+environment:
+    DC_SOCKETCAN_SRC_CONF_INTERFACE_NAME: ${DC_INTERFACE}
+    DC_SOCKETCAN_SRC_CONF_SOCKETCAN_OPTIONS_FD: ${DC_FD}
+    DC_SOCKETCAN_INIT_OPTIONS_LISTENONLY: ${DC_LISTENONLY}
+    DC_SOCKETCAN_INIT_OPTIONS_FD_NON_ISO: ${DC_FD_NON_ISO}
+    DC_SOCKETCAN_INIT_OPTIONS_BITRATE: ${DC_BITRATE}
+    DC_SOCKETCAN_INIT_OPTIONS_SAMPLE_POINT: ${DC_SAMPLE_POINT}
+    DC_SOCKETCAN_INIT_OPTIONS_TQ: ${DC_TQ}
+    DC_SOCKETCAN_INIT_OPTIONS_PROP_SEG: ${DC_PROP_SEG}
+    DC_SOCKETCAN_INIT_OPTIONS_PHASE_SEG1: ${DC_PHASE_SEG1}
+    DC_SOCKETCAN_INIT_OPTIONS_PHASE_SEG2: ${DC_PHASE_SEG2}
+    DC_SOCKETCAN_INIT_OPTIONS_SJW: ${DC_SJW}
+    DC_SOCKETCAN_INIT_OPTIONS_DBITRATE: ${DC_DBITRATE}
+    DC_SOCKETCAN_INIT_OPTIONS_DSAMPLE_POINT: ${DC_DSAMPLE_POINT}
+    DC_SOCKETCAN_INIT_OPTIONS_DTQ: ${DC_DTQ}
+    DC_SOCKETCAN_INIT_OPTIONS_DPROP_SEG: ${DC_DPROP_SEG}
+    DC_SOCKETCAN_INIT_OPTIONS_DPHASE_SEG1: ${DC_DPHASE_SEG1}
+    DC_SOCKETCAN_INIT_OPTIONS_DPHASE_SEG2: ${DC_DPHASE_SEG2}
+    DC_SOCKETCAN_INIT_OPTIONS_DSJW: ${DC_DSJW}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+    DC_FILE_SRC_CONF_PATH: ${DC_DOWNSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_DOWNSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2からデータを受信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'socketcan'
+      display_strings_i18n:
+        - locale: jpn
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_INTERFACE
+      default: 'can0'
+      options_script: "/etc/core/docker-compose/measurement/services/SocketCAN/interface.sh"
+      display_strings_i18n:
+        - locale: jpn
+          name: Interface Name
+          description: SocketCANのインターフェイス名
+    - key: DC_FD
+      default: 'false'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: CAN FD
+          description: CAN FDの有効（true）／無効（false）
+    - key: DC_LISTENONLY
+      default: 'off'
+      options: ['on', 'off']
+      display_strings_i18n:
+        - locale: jpn
+          name: Listen Only
+          description: Listen Onlyモードの有効（on）／無効（off）
+    - key: DC_FD_NON_ISO
+      default: 'off'
+      options: ['on', 'off']
+      display_strings_i18n:
+        - locale: jpn
+          name: non-ISO CAN FD
+          description: non-ISOモードの有効（on）／無効（off）。CAN FDが有効な場合のみ反映されます。
+    - key: DC_BITRATE
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Bitrate
+          description: CAN通信のビットレート。CAN FDが有効な場合はアービトレーションフェーズのビットレート。
+          unit: bps
+    - key: DC_SAMPLE_POINT
+      default: ''
+      validation: '^(|0.[0-9][0-9][0-9])$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Sample Point
+          description: CAN通信のSample Point。CAN FDが有効な場合はアービトレーションフェーズのSample Point。
+    - key: DC_TQ
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Time Quantum
+          description: CAN通信のTime Quantum。CAN FDが有効な場合はアービトレーションフェーズのTime Quantum。
+    - key: DC_PROP_SEG
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Propagation Segment
+          description: CAN通信のPropagation Segment。CAN FDが有効な場合はアービトレーションフェーズのPropagation Segment。
+    - key: DC_PHASE_SEG1
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Phase Buffer Segment 1
+          description: CAN通信のPhase Buffer Segment 1。CAN FDが有効な場合はアービトレーションフェーズのPhase Buffer Segment 1。
+    - key: DC_PHASE_SEG2
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Phase Buffer Segment 2
+          description: CAN通信のPhase Buffer Segment 2。CAN FDが有効な場合はアービトレーションフェーズのPhase Buffer Segment 2。
+    - key: DC_SJW
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Sync Jump Width
+          description: CAN通信のSync Jump Width。CAN FDが有効な場合はアービトレーションフェーズのSync Jump Width。
+    - key: DC_DBITRATE
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Bitrate for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのビットレート。
+          unit: bps
+    - key: DC_DSAMPLE_POINT
+      default: ''
+      validation: '^(|0.[0-9][0-9][0-9])$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Sample Point for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのSample Point。
+    - key: DC_DTQ
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Time Quantum for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのTime Quantum。
+    - key: DC_DPROP_SEG
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Propagation Segment for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのPropagation Segment。
+    - key: DC_DPHASE_SEG1
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Phase Buffer Segment 1 for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのPhase Buffer Segment 1。
+    - key: DC_DPHASE_SEG2
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Phase Buffer Segment 2 for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのPhase Buffer Segment 2。
+    - key: DC_DSJW
+      default: ''
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Sync Jump Width for Data phase
+          description: CAN FDが有効な場合に使用されるデータフェーズのSync Jump Width。

@@ -1,0 +1,31 @@
+diff --git a/Makefile b/Makefile
+index 4da6092..2e1ffb1 100644
+--- a/Makefile
++++ b/Makefile
+@@ -2370,14 +2370,13 @@ export CONFIG_RTL8821AU = m
+ all: modules
+ 
+ modules:
+-	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KSRC) M=$(shell pwd)  modules
++	$(MAKE) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -C $(KERNEL_SRC) M=$(shell pwd)  modules
+ 
+ strip:
+ 	$(CROSS_COMPILE)strip $(MODULE_NAME).ko --strip-unneeded
+ 
+-install:
+-	install -p -m 644 $(MODULE_NAME).ko  $(MODDESTDIR)
+-	/sbin/depmod -a ${KVER}
++modules_install:
++	$(MAKE) -C $(KERNEL_SRC) M=$(PWD) modules_install
+ 
+ uninstall:
+ 	rm -f $(MODDESTDIR)/$(MODULE_NAME).ko
+@@ -2425,7 +2424,7 @@ config_r:
+ .PHONY: modules clean
+ 
+ clean:
+-	#$(MAKE) -C $(KSRC) M=$(shell pwd) clean
++	$(MAKE) -C $(KERNEL_SRC) M=$(shell pwd) clean
+ 	cd hal ; rm -fr */*/*/*.mod.c */*/*/*.mod */*/*/*.o */*/*/.*.cmd */*/*/*.ko
+ 	cd hal ; rm -fr */*/*.mod.c */*/*.mod */*/*.o */*/.*.cmd */*/*.ko
+ 	cd hal ; rm -fr */*.mod.c */*.mod */*.o */.*.cmd */*.ko

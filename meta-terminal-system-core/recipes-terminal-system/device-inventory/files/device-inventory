@@ -1,0 +1,401 @@
+#!/bin/bash -e
+
+# device specific contents
+DEVICE_SPECIFIC_HELP=""
+DEVICE_SPECIFIC_LONG_OPTS=""
+function collect_content_firmware_device_specific() { content_firmware_device_specific=""; }
+function collect_content_device_specific() { content_device_specific=""; }
+export DEVICE_SPECIFIC_SCRIPT=${TEST_DEVICE_SPECIFIC_SCRIPT:-/usr/bin/device-inventory-device-specific.sh}
+source $DEVICE_SPECIFIC_SCRIPT
+
+export RUNDIR="/var/run/device-inventory"
+export CUSTOM_INVENTORY_DIR="${RUNDIR}/custom.d"
+export PID_FILE="${RUNDIR}/device-inventory.pid"
+export JSON_FILE="${RUNDIR}/device-inventory.json"
+export TMP_FILE="${RUNDIR}/device-inventory.tmp"
+export INTERVAL_FILE="${RUNDIR}/interval"
+
+function help() {
+    cat <<EOF
+Usage: $(basename "${BASH_SOURCE[0]}") [OPTIONS] [INVENTORY_TYPE]
+
+Options:
+    -h, --help            Print this help and exit
+    -d, --daemon          Run device-inventory daemon
+    -i, --interval        Daemon inventory collection interval (in seconds)
+
+INVENTORY_TYPE:
+    --all                 Print all inventory
+    --custom              Print custom inventory (JSON files stored in ${CUSTOM_INVENTORY_DIR})
+    --df                  Print df
+    --firmware            Print firmware
+    --gps                 Print gps
+    --ip                  Print ip
+    --lsusb               Print lsusb
+    --mmcli               Print mmcli
+    --ping                Print ping
+    --route               Print route
+    --top                 Print top
+    --vmstat              Print vmstat
+    --who                 Print who
+${DEVICE_SPECIFIC_HELP}
+
+EOF
+}
+
+function clean() {
+    if "${DAEMON}"; then
+        rm -rf "${RUNDIR}/"*
+    fi
+}
+trap clean EXIT
+
+function collect_content_df() {
+    content_df="$(df | jc --df | jq 'map({(.mounted_on): .}) | add' | jq '{df: .}')"
+}
+
+function collect_content_firmware_apt_usbtrx() {
+    local apt_usbtrx_list="[]"
+    for device_path in /dev/aptUSB*; do
+        if [ ! -e "$device_path" ]; then
+            continue
+        fi
+
+        # Get by sysfs
+        local device_name="$(basename $device_path)"
+        local version="$(cat /sys/class/usbmisc/$device_name/device/firmware_version)"
+        local channel="$(cat /sys/class/usbmisc/$device_name/device/ch)"
+
+        # Device information is the same for channels, so unused except 0ch.
+        if [ $channel -ne 0 ]; then
+            continue
+        fi
+
+        # Get by udevadm
+        local sync_pulse="$(cat /sys/class/usbmisc/$device_name/device/sync_pulse)"
+        local product="$(udevadm info --query=all --name=$device_path | grep 'ID_MODEL=' | awk -F= '{print $2}')"
+        local serial="$(udevadm info --query=all --name=$device_path | grep 'ID_SERIAL_SHORT=' | awk -F= '{print $2}')"
+
+        local apt_usbtrx_item='[{
+                "product": "'$product'",
+                "serial": "'$serial'",
+                "sync_pulse": "'$sync_pulse'",
+                "version": "'$version'"
+            }]'
+        apt_usbtrx_list="$(echo $apt_usbtrx_list $apt_usbtrx_item | jq -s add)"
+    done
+
+    content_firmware_apt_usbtrx="$(echo $apt_usbtrx_list | jq '{"apt_usbtrx": .}')"
+}
+
+function collect_content_firmware_terminal_display() {
+    local version_file="/run/terminal-display/firmware_version"
+    local terminal_display="{}"
+
+    if [ -f "$version_file" ]; then
+        local version="$(cat $version_file)"
+        terminal_display="{\"version\": \"$version\"}"
+    fi
+
+    content_firmware_terminal_display="{\"terminal_display\": $terminal_display}"
+}
+
+function collect_content_firmware() {
+    collect_content_firmware_apt_usbtrx
+    collect_content_firmware_terminal_display
+    collect_content_firmware_device_specific
+
+    local firmware="$(echo \
+        $content_firmware_apt_usbtrx \
+        $content_firmware_terminal_display \
+        $content_firmware_device_specific |
+        jq -s add)"
+
+    content_firmware="$(echo $firmware | jq '{"firmware": .}')"
+}
+
+function collect_content_gps() {
+    local journal_output="$(journalctl -u docker --since '10 seconds ago')"
+
+    # [UBX-STATUS] is logged every 3 seconds by device-connector-intdash
+    local gps_ubx="$(echo "$journal_output" | grep '\[UBX-STATUS\]' | sed -n 's/.*\[UBX-STATUS\] \({.*}\).*/\1/p' | tail -n 1)"
+
+    # nmea-packet(gps) is logged every 3 seconds by device-connector-intdash
+    local gps_nmea_mode="$(echo "$journal_output" | grep 'nmea-packet(gps)' | sed -n 's/^.*nmea-packet(gps):.*<mode:\([NADE]\)>.*/\1/p' | tail -n 1)"
+    local gps_nmea_fix="$(echo "$journal_output" | grep 'nmea-packet(gps)' | sed -n 's/^.*nmea-packet(gps):.*<fix:\([0-9a-zA-Z _-]*\)>.*/\1/p' | tail -n 1)"
+    local gps_nmea
+    if [ -n "$gps_nmea_mode" ] && [ -n "$gps_nmea_fix" ]; then
+        gps_nmea="{\"nmea\": {\"mode\": \"$gps_nmea_mode\", \"fix\": \"$gps_nmea_fix\"}}"
+    else
+        gps_nmea="{}"
+    fi
+
+    local gps="$(echo $gps_ubx $gps_nmea | jq -s 'add')"
+
+    content_gps="$(echo $gps | jq '{"gps": .}')"
+}
+
+function collect_content_ip() {
+    ip_old="$ip"
+    ip="$(ip -s -j a)"
+
+    # append $iface.stats64.$direction.bps
+    if [ -n "$ip_old" ] && [ $ACTUAL_COLLECT_INTERVAL_SEC -gt 0 ]; then
+        for iface in $(echo $ip | jq -r '.[] | .ifname'); do
+
+            if echo "$ip_old" | jq -e ".[] | select(.ifname == \"$iface\")" >/dev/null; then
+                for direction in tx rx; do
+                    bytes_old=$(echo "$ip_old" | jq -r ".[] | select(.ifname == \"$iface\") | .stats64.$direction.bytes")
+                    bytes=$(echo "$ip" | jq -r ".[] | select(.ifname == \"$iface\") | .stats64.$direction.bytes")
+                    bps=$(((bytes - bytes_old) * 8 / ACTUAL_COLLECT_INTERVAL_SEC))
+                    ip=$(echo "$ip" | jq "(.[] | select(.ifname == \"$iface\") | .stats64.$direction.bps) |= $bps")
+                done
+            fi
+        done
+    else
+        for iface in $(echo $ip | jq -r '.[] | .ifname'); do
+            for direction in tx rx; do
+                bps=0
+                ip=$(echo "$ip" | jq "(.[] | select(.ifname == \"$iface\") | .stats64.$direction.bps) |= $bps")
+            done
+        done
+    fi
+
+    content_ip="$(echo $ip | jq 'map({(.ifname): .}) | add' | jq '{ip: .}')"
+}
+
+function collect_content_lsusb() {
+    content_lsusb="$(lsusb | jc --lsusb | jq '{lsusb: .}')"
+}
+
+function collect_content_mmcli() {
+    local modem_list="[]"
+
+    for modem in $(mmcli -J -L | jq -r '."modem-list"[]'); do
+        local common="$(mmcli -J -m $modem | jq .modem)"
+        local firmware="$(mmcli -J -m $modem --firmware-list | jq .modem)"
+
+        local state="$(echo $common | jq -r '.generic.state')"
+
+        if [ "$state" == "connected" ]; then
+            local location="$(mmcli -J -m $modem --location-status | jq .modem)"
+            local messaging="$(mmcli -J -m $modem --messaging-status | jq .modem)"
+            local time="$(mmcli -J -m $modem --time | jq .modem)"
+            local sim="$(mmcli -J -m $modem -i $(echo $common | jq -r '.generic.sim') 2>/dev/null)"
+
+            # Signal setup required
+            mmcli -m $modem --signal-setup 10 2>&1 >/dev/null
+            local signal="$(mmcli -J -m $modem --signal-get | jq .modem)"
+
+            # Get the active-band from qmicli and add it to .generic.active-band
+            local device_name="$(echo $common | jq -r '.generic."primary-port"')"
+            local active_band="$(qmicli -p -d /dev/$device_name --nas-get-rf-band-info | grep 'Active Band Class' | head -n 1 | sed -e "s/^.*: '\(.*\)'.*$/\1/g")"
+            common="$(echo $common | jq -S '.generic |= .+ {"active-band": "'$active_band'"}')"
+        fi
+
+        local modem="$(echo $common $location $messaging $time $firmware $sim $signal $generic_active_band | jq -s '[add]')"
+        modem_list="$(echo $modem_list $modem | jq -s add)"
+    done
+
+    content_mmcli="$(echo $modem_list | jq '{"mmcli": .}')"
+}
+
+function collect_content_ping() {
+    content_ping="$(ping -c 1 -w 5 8.8.8.8 2>/dev/null | jc --ping | jq '{ping: .}')"
+}
+
+function collect_content_route() {
+    content_route="$(route | jc --route | jq '{route: .}')"
+}
+
+function collect_content_top() {
+    # Avoid direct piping of command output to prevent incorrect statistics
+    local -r temp="$(mktemp)"
+    top -b -n 1 -i >$temp
+    content_top="$(cat $temp | jc --top -q | jq '{top: .}')"
+    rm -f $temp
+}
+
+function collect_content_vmstat() {
+    content_vmstat="$(vmstat -a 1 2 | jc --vmstat | jq '{vmstat: .[1]}')"
+}
+
+function collect_content_who() {
+    content_who="$(who | jc --who | jq '{who: .}')"
+}
+
+function collect_content_custom() {
+    local custom="{"
+    for file in "$CUSTOM_INVENTORY_DIR"/*; do
+        if jq -e . >/dev/null 2>&1 <"$file"; then
+            filename=$(basename "$file")
+            content=$(jq -c . <"$file")
+            custom+="\"$filename\": $content,"
+        fi
+    done
+    custom=${custom%,}
+    custom+="}"
+
+    content_custom="$(echo $custom | jq '{"custom": .}')"
+}
+
+function collect_content() {
+    collect_content_device_specific
+    collect_content_df
+    collect_content_firmware
+    collect_content_gps
+    collect_content_ip
+    collect_content_lsusb
+    collect_content_mmcli
+    collect_content_ping
+    collect_content_route
+    collect_content_top
+    collect_content_vmstat
+    collect_content_who
+    collect_content_custom
+
+    local content="$(echo \
+        $content_device_specific \
+        $content_df \
+        $content_firmware \
+        $content_gps \
+        $content_ip \
+        $content_lsusb \
+        $content_mmcli \
+        $content_ping \
+        $content_route \
+        $content_top \
+        $content_vmstat \
+        $content_who \
+        $content_custom |
+        jq -c -s add)"
+
+    if [ "$content" != "null" ]; then
+        echo "$content" >"${TMP_FILE}"
+        mv -f "${TMP_FILE}" "${JSON_FILE}"
+    fi
+}
+
+function device_invetory_loop() {
+    if [ -f "${PID_FILE}" ] && kill -0 $(cat "${PID_FILE}") 2>/dev/null; then
+        echo "Error: device-inventory daemon is already running with pid: $(cat ${PID_FILE})."
+        exit 1
+    fi
+
+    echo "start device-inventory daemon."
+    local current_pid=$$
+    mkdir -p "${RUNDIR}" "${CUSTOM_INVENTORY_DIR}"
+    echo $current_pid >"${PID_FILE}"
+    echo "${COLLECT_INTERVAL_SEC}" >"${INTERVAL_FILE}"
+
+    while [ -f "${PID_FILE}" ]; do
+        if [ $current_pid -ne $(cat "${PID_FILE}") ]; then
+            echo "Error: device-inventory daemon is restarted."
+            exit 1
+        fi
+
+        SECONDS=0
+        collect_content
+        elapsed_time=$SECONDS
+
+        # consider interval changes
+        interval=$(cat "${INTERVAL_FILE}")
+        interval="${interval:-$COLLECT_INTERVAL_SEC}"
+
+        sleep_time=$((interval - elapsed_time))
+        if [ $sleep_time -gt 0 ]; then
+            sleep $sleep_time
+            ACTUAL_COLLECT_INTERVAL_SEC=$interval
+        else
+            ACTUAL_COLLECT_INTERVAL_SEC=$elapsed_time
+        fi
+    done
+
+    echo "Error: $PID_FILE is removed."
+    exit 1
+}
+
+function wait_for_json_file() {
+    local count_timeout=20
+    local count=0
+
+    while [ ! -f "${JSON_FILE}" ]; do
+        if [ $count -eq $count_timeout ]; then
+            echo "Error: ${JSON_FILE} is not found."
+            exit 1
+        fi
+        sleep 1
+        count=$((count + 1))
+    done
+}
+
+function print_device_inventory() {
+    if [ ! -f "${PID_FILE}" ]; then
+        echo "Error: device-inventory daemon is not running."
+        exit 1
+    fi
+
+    wait_for_json_file
+
+    if "${PRINT_ALL}"; then
+        filter="."
+    else
+        if [ ${#FILTERS[@]} -eq 0 ]; then
+            help
+            exit 1
+        fi
+        filter="{$(echo "${FILTERS[@]}" | tr ' ' ',')}"
+    fi
+
+    jq -c "$filter" "${JSON_FILE}"
+}
+
+DAEMON=false
+COLLECT_INTERVAL_SEC=10
+ACTUAL_COLLECT_INTERVAL_SEC=0
+PRINT_ALL=false
+FILTERS=()
+
+SHORT=h,d,i:
+LONG=help,daemon,interval:,all,custom,df,firmware,gps,ip,lsusb,mmcli,ping,route,top,vmstat,who${DEVICE_SPECIFIC_LONG_OPTS}
+OPTS=$(getopt -a --options $SHORT --longoptions $LONG -- "$@")
+
+eval set -- "$OPTS"
+
+while :; do
+    case "$1" in
+    -h | --help)
+        help
+        exit 0
+        ;;
+    -d | --daemon)
+        DAEMON=true
+        shift
+        ;;
+    -i | --interval)
+        COLLECT_INTERVAL_SEC=$2
+        shift 2
+        ;;
+    --all)
+        PRINT_ALL=true
+        shift
+        ;;
+    --)
+        shift
+        break
+        ;;
+    --*)
+        FILTERS+=("${1#--}")
+        shift
+        ;;
+    *)
+        echo "Unexpected option: $1"
+        ;;
+    esac
+done
+
+if "${DAEMON}"; then
+    device_invetory_loop
+else
+    print_device_inventory
+fi

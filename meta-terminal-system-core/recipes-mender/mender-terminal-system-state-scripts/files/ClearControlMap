@@ -1,0 +1,7 @@
+#!/bin/sh
+
+UPDATE_CONTROL_MAP_SCRIPT="/usr/bin/mender-device-api-update-controlmap.sh"
+
+$UPDATE_CONTROL_MAP_SCRIPT "clear"
+
+exit 0

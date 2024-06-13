@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Create workdir for the login user's ssh configuration directory
+TERMINAL_SYSTEM_OVERLAY="/data/overlay"
+TERMINAL_SYSTEM_OVERLAY_WORK="${TERMINAL_SYSTEM_OVERLAY}/work"
+USER_ADMIN="admin"
+USER_MAINT="maint"
+DOT_SSH_DIR_ADMIN="/home/${USER_ADMIN}/.ssh"
+DOT_SSH_DIR_MAINT="/home/${USER_MAINT}/.ssh"
+install -d -m 0700 -o root -g root ${TERMINAL_SYSTEM_OVERLAY_WORK}${DOT_SSH_DIR_ADMIN}
+install -d -m 0700 -o root -g root ${TERMINAL_SYSTEM_OVERLAY_WORK}${DOT_SSH_DIR_MAINT}

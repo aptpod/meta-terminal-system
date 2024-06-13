@@ -1,0 +1,25 @@
+From f6adb5ecc6f7e1b322cbcf3e8e2bea9e89624cf1 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Sun, 29 Oct 2023 21:46:07 +0900
+Subject: [PATCH] fix: ExecStop of systemd-update-utmp.service is not executed
+ https://bugzilla.redhat.com/show_bug.cgi?id=1619994
+
+---
+ units/systemd-update-utmp-runlevel.service.in | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/units/systemd-update-utmp-runlevel.service.in b/units/systemd-update-utmp-runlevel.service.in
+index 11177dc621..0e2eb1702f 100644
+--- a/units/systemd-update-utmp-runlevel.service.in
++++ b/units/systemd-update-utmp-runlevel.service.in
+@@ -13,7 +13,6 @@ Documentation=man:systemd-update-utmp-runlevel.service(8) man:utmp(5)
+ DefaultDependencies=no
+ RequiresMountsFor=/var/log/wtmp
+ Conflicts=shutdown.target
+-Requisite=systemd-update-utmp.service
+ After=systemd-update-utmp.service
+ After=runlevel1.target runlevel2.target runlevel3.target runlevel4.target runlevel5.target
+ Before=shutdown.target
+-- 
+2.25.1
+

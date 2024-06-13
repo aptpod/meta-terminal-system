@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# In Terminal System 2 1.0.0-beta.1, setting a login password is optional during provisioning,
+# so it is not saved in the data partition.
+# To allow password preservation even after OS updates, this script saves the password in the data partition.
+
+if [ ! -d "/data/overlay/etc" ]; then
+    mkdir -p /data/overlay/etc
+fi
+
+if [ ! -e "/data/overlay/etc/passwd" ]; then
+    cp -a /etc/passwd /data/overlay/etc/passwd
+fi
+
+if [ ! -e "/data/overlay/etc/shadow" ]; then
+    cp -a /etc/shadow /data/overlay/etc/shadow
+fi

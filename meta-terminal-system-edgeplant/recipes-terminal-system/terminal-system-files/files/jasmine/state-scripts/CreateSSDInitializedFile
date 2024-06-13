@@ -1,0 +1,5 @@
+#!/bin/sh
+
+SSD_INITIALIZED_FILE="/data/.ssd_initialized"
+
+touch ${SSD_INITIALIZED_FILE}

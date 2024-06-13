@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# In Terminal System 2 1.0.0-beta.1, setting a API password is optional during provisioning,
+# so it is not saved in the data partition.
+# To allow password preservation even after OS updates, this script saves the password in the data partition.
+
+if [ ! -d "/data/overlay/etc/core" ]; then
+    mkdir -p /data/overlay/etc/core
+fi
+
+if [ ! -e "/data/overlay/etc/core/htpasswd" ]; then
+    cp -a /etc/core/htpasswd /data/overlay/etc/core/htpasswd
+fi

@@ -1,0 +1,9 @@
+KERNEL!="sd[a-z]*", GOTO="usb_end"
+ENV{DEVPATH}!="*usb*", GOTO="usb_end"
+# Mount the device
+ACTION=="add", TAG+="systemd", ENV{SYSTEMD_WANTS}+="usb-automount@\"%k /media/usb_%k\".service"
+# Clean up after removal
+ACTION=="remove", RUN+="/usr/bin/systemd-mount --umount /media/usb_%k"
+ACTION=="remove", RUN+="/bin/rmdir /media/usb_%k"
+# Exit
+LABEL="usb_end"

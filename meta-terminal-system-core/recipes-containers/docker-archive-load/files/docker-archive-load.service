@@ -1,0 +1,12 @@
+[Unit]
+Description=Load Terminal System docker images at boot
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/docker-archive-load.sh
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

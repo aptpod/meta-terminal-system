@@ -1,0 +1,66 @@
+From 769650e7af24092ea82941f4dc11db31f9b315e9 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Thu, 25 May 2023 17:36:15 +0900
+Subject: [PATCH] feat: exclusive access to powermanage
+
+---
+ lib/systemd/system/edgeplant-l4t-faultlog.service            | 2 +-
+ usr/bin/edgeplant-l4t-tools               | 9 +++++++++
+ usr/bin/edgeplant-l4t/edgeplant-l4t-shutdown.sh      | 9 +++++++++
+ 3 files changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/lib/systemd/system/edgeplant-l4t-faultlog.service b/lib/systemd/system/edgeplant-l4t-faultlog.service
+index 27bfd17..8503934 100644
+--- a/lib/systemd/system/edgeplant-l4t-faultlog.service
++++ b/lib/systemd/system/edgeplant-l4t-faultlog.service
+@@ -4,7 +4,7 @@ After=syslog.target
+ 
+ [Service]
+ Type=oneshot
+-ExecStart=/bin/sh -c '/usr/bin/edgeplant-l4t/edgeplant_powermanage faultlog || true'
++ExecStart=/bin/sh -c 'flock --timeout 10 /var/lock/edgeplant_powermanage.lock /usr/bin/edgeplant-l4t/edgeplant_powermanage faultlog || true'
+ Restart=no
+ 
+ [Install]
+diff --git a/usr/bin/edgeplant-l4t-tools b/usr/bin/edgeplant-l4t-tools
+index 50a12c9..8cacd8c 100755
+--- a/usr/bin/edgeplant-l4t-tools
++++ b/usr/bin/edgeplant-l4t-tools
+@@ -3,6 +3,15 @@
+ # Copyright (c) 2021, aptpod,Inc.
+ #
+ 
++POWERMANAGE_LOCK_PATH="/var/lock/edgeplant_powermanage.lock"
++POWERMANAGE_TIMEOUT=10
++
++exec 9>"${POWERMANAGE_LOCK_PATH}"
++if ! flock --timeout $POWERMANAGE_TIMEOUT 9; then
++    echo "Unable to acquire lock, exiting."
++    exit 1
++fi
++
+ source "/usr/bin/edgeplant-l4t/menu_select.sh"
+ 
+ function check_root_access() {
+diff --git a/usr/bin/edgeplant-l4t/edgeplant-l4t-shutdown.sh b/usr/bin/edgeplant-l4t/edgeplant-l4t-shutdown.sh
+index b3b1854..b52ba5f 100644
+--- a/usr/bin/edgeplant-l4t/edgeplant-l4t-shutdown.sh
++++ b/usr/bin/edgeplant-l4t/edgeplant-l4t-shutdown.sh
+@@ -1,5 +1,14 @@
+ #!/bin/bash
+ 
++POWERMANAGE_LOCK_PATH="/var/lock/edgeplant_powermanage.lock"
++POWERMANAGE_TIMEOUT=10
++
++exec 9>"${POWERMANAGE_LOCK_PATH}"
++if ! flock --timeout $POWERMANAGE_TIMEOUT 9; then
++    echo "Unable to acquire lock, exiting."
++    exit 1
++fi
++
+ PWR_MANAGE=/usr/bin/edgeplant-l4t/edgeplant_powermanage
+ CURRENT_VERSION=$("$PWR_MANAGE" version | sed -e 's/version: //g')
+ MAJOR=$(echo "$CURRENT_VERSION" | sed -e 's|^\([0-9]*\)\.\([0-9]*\)\.\([0-9]*\)|\1|g')
+-- 
+2.25.1
+

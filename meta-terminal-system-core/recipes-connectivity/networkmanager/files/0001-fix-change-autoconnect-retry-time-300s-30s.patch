@@ -1,0 +1,25 @@
+From bb21a94be03618903c1defaa1b9e516b36fcce20 Mon Sep 17 00:00:00 2001
+From: ochiai <ochiai@aptpod.co.jp>
+Date: Sat, 4 Dec 2021 14:45:37 +0900
+Subject: [PATCH] fix: change autoconnect retry time 300s -> 30s
+
+---
+ src/settings/nm-settings-connection.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/core/settings/nm-settings-connection.c b/src/core/settings/nm-settings-connection.c
+index ccbab80..eabef0f 100644
+--- a/src/core/settings/nm-settings-connection.c
++++ b/src/core/settings/nm-settings-connection.c
+@@ -29,7 +29,7 @@
+ 
+ #define AUTOCONNECT_RETRIES_UNSET       -2
+ #define AUTOCONNECT_RETRIES_FOREVER     -1
+-#define AUTOCONNECT_RESET_RETRIES_TIMER 300
++#define AUTOCONNECT_RESET_RETRIES_TIMER 30
+ 
+ #define SEEN_BSSIDS_MAX 30
+ 
+-- 
+2.24.3 (Apple Git-128)
+

@@ -1,0 +1,27 @@
+From 632d7f2e60e91095a97b7a9d8d751223aad035de Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Fri, 20 Oct 2023 12:05:18 +0900
+Subject: [PATCH] feat:  fake-hwclock.service runs after local file systems are mounted
+ Since /etc is mounted as an overlay filesystem, it's crucial that
+ fake-hwclock.service runs after the local file systems are mounted to ensure
+ that /etc/fake-hwclock.data is accessible.
+
+---
+ debian/fake-hwclock.service | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/debian/fake-hwclock.service b/debian/fake-hwclock.service
+index 371734c..be34823 100644
+--- a/debian/fake-hwclock.service
++++ b/debian/fake-hwclock.service
+@@ -2,6 +2,7 @@
+ Description=Restore / save the current clock
+ Documentation=man:fake-hwclock(8)
+ DefaultDependencies=no
++After=local-fs.target
+ Before=sysinit.target shutdown.target
+ Conflicts=shutdown.target
+ 
+-- 
+2.25.1
+

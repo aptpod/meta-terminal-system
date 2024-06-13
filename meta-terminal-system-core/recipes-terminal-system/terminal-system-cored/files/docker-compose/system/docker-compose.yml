@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  intdash-edge-agent2:
+    image: ${BASE_URI}/${IMAGE_NAME_AGENT2}:${IMAGE_TAG_AGENT2}
+    healthcheck:
+      test: intdash-agentd ping
+      interval: 1s # We want to detect the healthy result ASAP, so we have no choice but to shorten the interval.
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+    command: intdash-agentd serve -l info --port 50051 --grpc-reflection --info-duration-to-ignore 5
+    stop_grace_period: 60s
+    volumes:
+      - /var/run/core/intdash:/var/run/intdash
+      - /var/lib/core/intdash:/var/lib/intdash
+    networks:
+      - intdash
+
+  terminal-display-client:
+    image: ${BASE_URI}/${IMAGE_NAME_TERMINAL_DISPLAY_CLIENT}:${IMAGE_TAG_TERMINAL_DISPLAY_CLIENT}
+    privileged: true
+    network_mode: host
+    restart: unless-stopped
+    volumes:
+      - /dev:/dev
+      - /run/terminal-display:/run/terminal-display
+      - /etc/terminal-display:/etc/terminal-display
+
+networks:
+  intdash:

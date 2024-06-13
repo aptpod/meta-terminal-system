@@ -1,0 +1,11 @@
+[Unit]
+Description=Commit terminal system 2 provisioning settings
+Before=mender-client.service terminal-system-cored.service
+ConditionPathExists=!/data/.ts2-config-initialized
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ts2-config-commit.sh
+
+[Install]
+WantedBy=multi-user.target

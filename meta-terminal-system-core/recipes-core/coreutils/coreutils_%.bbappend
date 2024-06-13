@@ -1,0 +1,3 @@
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+
+ALTERNATIVE_PRIORITY = "400"

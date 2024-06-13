@@ -1,0 +1,5 @@
+{
+    "credHelpers": {
+        "@TS_AWS_ECR_BASE_URI@": "ecr-login-default"
+    }
+}

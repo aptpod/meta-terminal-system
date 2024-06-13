@@ -1,0 +1,60 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - intdash-lock:/var/lock/intdash
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/ubx.yml"
+environment:
+    DC_UBX_SRC_CONF_PATH: ${DC_DEVICE_PATH}
+    DC_UBX_SRC_CONF_BAUD_RATE: 57600
+    DC_UBX_SRC_CONF_MEAS_RATE_MS: 200
+    DC_UBX_SRC_CONF_NAV_RATE: 1
+    DC_UBX_SRC_CONF_HIGH_NAV_RATE_HZ: ${DC_HIGH_NAV_RATE}
+    DC_UBX_SRC_CONF_ESF_STATUS_RATE: 1
+    DC_UBX_SRC_CONF_HNR_ATT_RATE: 1
+    DC_UBX_SRC_CONF_HNR_INS_RATE: 1
+    DC_UBX_SRC_CONF_HNR_PVT_RATE: 1
+    DC_UBX_SRC_CONF_NAV_STATUS_RATE: 1
+    DC_UBX_ISCPV2_FILTER_CONF_HNR_PVT_FILTER_OUT_BY_GPS_FIX: '[0, 5]'
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'gps(ubx)'
+      display_strings_i18n:
+        - locale: jpn
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_DEVICE_PATH
+      default: ''
+      path_glob:
+        - /dev/tty*
+        - /dev/serial/by-id/*
+        - /dev/serial/by-path/*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path
+          description: TTYデバイスのパス
+    - key: DC_HIGH_NAV_RATE
+      default: 5
+      validation: '^([1-9]|1[0-9]|20)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: High Navigation Rate
+          description: UBX-HNRメッセージの送信間隔(周波数) (20以下の値で指定)
+          unit: Hz

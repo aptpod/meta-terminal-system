@@ -1,0 +1,5 @@
+SUBSYSTEM=="tty", SUBSYSTEMS=="usb", ATTRS{idVendor}=="10c4", ATTRS{idProduct}=="ea60", \
+ACTION=="add", SYMLINK="ttyM5Stack" TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/sys/subsystem/m5stack/devices/m5stack"
+
+SUBSYSTEM=="tty", SUBSYSTEMS=="usb", ATTRS{idVendor}=="1a86", ATTRS{idProduct}=="55d4", \
+ACTION=="add", SYMLINK="ttyM5Stack" TAG+="systemd", ENV{SYSTEMD_ALIAS}+="/sys/subsystem/m5stack/devices/m5stack"

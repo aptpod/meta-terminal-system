@@ -1,0 +1,20 @@
+version: "3"
+services:
+    device-inventory:
+        command:
+            - --config
+            - /etc/dc_conf/repeat_process_json.yml
+        depends_on:
+            intdash-edge-agent2:
+                condition: service_healthy
+        environment:
+            DC_FILE_SINK_CONF_PATH: /var/run/intdash/up-device-inventory.fifo
+            DC_ISCP_V2_COMPAT_FILTER_CONF_CONVERT_RULE_STRING_NAME: device_inventory
+            DC_PRINT_LOG_FILTER_CONF_TAG: device-inventory
+            DC_REPEAT_PROCESS_SRC_CONF_COMMAND: if [ $(cat /var/run/device-inventory/interval) -ne 10 ]; then echo 10 > /var/run/device-inventory/interval; fi; cat /var/run/device-inventory/device-inventory.json
+            DC_REPEAT_PROCESS_SRC_CONF_INTERVAL_MS: 10000
+        image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+        restart: unless-stopped
+        volumes:
+            - /var/run/core/intdash:/var/run/intdash
+            - /var/run/device-inventory:/var/run/device-inventory

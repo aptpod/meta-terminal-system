@@ -1,0 +1,301 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - intdash-lock:/var/lock/intdash
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/apt_analog.yml"
+environment:
+    DC_APT_ANALOGTRX_SRC_CONF_PATH: ${DC_DEVICE_PATH}
+    DC_APT_ANALOGTRX_SRC_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_SEND_RATE: ${DC_INPUT_SEND_RATE}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_0: ${DC_INPUT_ENABLED_0}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_1: ${DC_INPUT_ENABLED_1}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_2: ${DC_INPUT_ENABLED_2}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_3: ${DC_INPUT_ENABLED_3}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_4: ${DC_INPUT_ENABLED_4}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_5: ${DC_INPUT_ENABLED_5}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_6: ${DC_INPUT_ENABLED_6}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_ENABLED_7: ${DC_INPUT_ENABLED_7}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_0: ${DC_INPUT_VOLTAGE_MIN_0}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_1: ${DC_INPUT_VOLTAGE_MIN_1}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_2: ${DC_INPUT_VOLTAGE_MIN_2}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_3: ${DC_INPUT_VOLTAGE_MIN_3}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_4: ${DC_INPUT_VOLTAGE_MIN_4}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_5: ${DC_INPUT_VOLTAGE_MIN_5}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_6: ${DC_INPUT_VOLTAGE_MIN_6}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MIN_7: ${DC_INPUT_VOLTAGE_MIN_7}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_0: ${DC_INPUT_VOLTAGE_MAX_0}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_1: ${DC_INPUT_VOLTAGE_MAX_1}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_2: ${DC_INPUT_VOLTAGE_MAX_2}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_3: ${DC_INPUT_VOLTAGE_MAX_3}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_4: ${DC_INPUT_VOLTAGE_MAX_4}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_5: ${DC_INPUT_VOLTAGE_MAX_5}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_6: ${DC_INPUT_VOLTAGE_MAX_6}
+    DC_APT_ANALOGTRX_SRC_CONF_INPUT_VOLTAGE_MAX_7: ${DC_INPUT_VOLTAGE_MAX_7}
+    DC_APT_ANALOGTRX_SRC_CONF_OUTPUT_ENABLED: ${DC_OUTPUT_ENABLED}
+    DC_APT_ANALOGTRX_SRC_CONF_OUTPUT_WAVEFORM_TYPE: ${DC_OUTPUT_WAVEFORM_TYPE}
+    DC_APT_ANALOGTRX_SRC_CONF_OUTPUT_VOLTAGE: ${DC_OUTPUT_VOLTAGE}
+    DC_APT_ANALOGTRX_SRC_CONF_OUTPUT_FREQUENCY: ${DC_OUTPUT_FREQUENCY}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'analog'
+      display_strings_i18n:
+        - locale: jpn
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_DEVICE_PATH
+      default: '/dev/aptUSB0'
+      path_glob:
+        - /dev/apt-usb/by-id/usb-aptpod__Inc._EP1-AG08A*
+        - /dev/apt-usb/by-id/usb-aptpod__Inc._PA-AGU081*
+        - /dev/aptUSB*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path
+          description: ANALOG-USB Interfaceのデバイスパス
+    - key: DC_TIMESTAMP_MODE
+      default: 'device'
+      options: ['device', 'host']
+      display_strings_i18n:
+        - locale: jpn
+          name: Timestamp Mode
+          description: 受信したデータに対して、タイムスタンプをどのように付与するか
+    - key: DC_INPUT_SEND_RATE
+      default: '1250000'
+      options: [10, 100, 1000, 10000, 156250, 312500, 625000, 1250000, 2500000, 5000000, 10000000]
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Sampling Frequency
+          description: サンプリング周波数
+          unit: mHz
+    - key: DC_INPUT_ENABLED_0
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 0 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_1
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 1 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_2
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 2 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_3
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 3 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_4
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 4 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_5
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 5 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_6
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch6 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとに、有効／無効を切り替える
+    - key: DC_INPUT_ENABLED_7
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 7 Enabled
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、有効／無効を切り替える
+    - key: DC_INPUT_VOLTAGE_MIN_0
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 0 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_1
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 1 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_2
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 2 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_3
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 3 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_4
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 4 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_5
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 5 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_6
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 6 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MIN_7
+      default: '-5000'
+      options: ['-10000', '-5000', '0']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 7 Voltage (-)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最小値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_0
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 0 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_1
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 1 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_2
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 2 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_3
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 3 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_4
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 4 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_5
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 5 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_6
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 6 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_INPUT_VOLTAGE_MAX_7
+      default: '5000'
+      options: ['5000', '10000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Input Ch 7 Voltage (+)
+          description: ANALOG-USB Interfaceのアナログ入力ポートごとの、入力電圧の最大値
+          unit: mV
+    - key: DC_OUTPUT_ENABLED
+      default: 'false'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Output Enabled
+          description: ANALOG-USB Interfaceのアナログ出力ポートの、有効／無効を切り替える
+    - key: DC_OUTPUT_WAVEFORM_TYPE
+      default: '0'
+      options: ['0', '1', '2', '3', '16']
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Output Enabled
+          description: ANALOG-USB Interfaceのアナログ出力ポートから出力する信号波形を選択します（0:擬似ランダム信号、1:正弦波、2:三角波、3:矩形波、16:固定）
+    - key: DC_OUTPUT_VOLTAGE
+      default: '20'
+      validation: '^([2468]0|[1-9][02468]0|[1-4][0-9][02468]0|5000)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Output Voltage
+          description: ANALOG-USB Interfaceのアナログ出力ポートから出力する信号
+          unit: mV
+    - key: DC_OUTPUT_FREQUENCY
+      default: '1000'
+      validation: '^[1-9][0-9]?000$|100000$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Analog Output Frequency
+          description: ANALOG-USB Interfaceのアナログ出力ポートから出力する信号波形の周波数
+          unit: mHz

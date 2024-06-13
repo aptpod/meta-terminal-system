@@ -1,0 +1,12 @@
+# e.g.:
+#
+# ```
+# finders:
+# - tracer:
+#   - journalctl
+#   - CONTAINER_NAME=system-intdash-edge-agent2-1
+#   - -f
+#   patterns:
+#   - regex: " E "
+#     level: "ERROR"
+# ```

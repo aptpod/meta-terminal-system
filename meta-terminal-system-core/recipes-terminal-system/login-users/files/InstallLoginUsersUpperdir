@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# In Terminal System 2 1.0.0-beta.1, the 'uppderdir' does not exist,
+# so this script creates it during OS updates.
+
+USER_ADMIN="admin"
+USER_MAINT="maint"
+install -d -m 0700 -o ${USER_ADMIN} -g ${USER_ADMIN} /data/overlay/home/${USER_ADMIN}/.ssh
+install -d -m 0700 -o ${USER_MAINT} -g ${USER_MAINT} /data/overlay/home/${USER_MAINT}/.ssh

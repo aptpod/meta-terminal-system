@@ -1,0 +1,46 @@
+From aacb4aaa46565d3f0598e02819f82cb98bd14067 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Tue, 10 May 2022 21:58:54 +0900
+Subject: [PATCH] add: update scripts
+
+---
+ src/mender-inventory-mender-configure | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+
+diff --git a/src/mender-inventory-mender-configure b/src/mender-inventory-mender-configure
+index 905ed48..e55a68b 100755
+--- a/src/mender-inventory-mender-configure
++++ b/src/mender-inventory-mender-configure
+@@ -50,6 +50,29 @@ if [ -z "$SERVER" ]; then
+     exit 1
+ fi
+ 
++# Update configuration at the time of inventory update
++UPDATE_DIR=${TEST_UPDATE_DIR:-/usr/lib/mender-configure/update-device-config.d}
++update_scripts() {
++    for script in "$UPDATE_DIR"/*; do
++        if [ "$script" = "$UPDATE_DIR/*" ]; then
++            # No files present, glob failed and returned verbatim '*'.
++            return
++        fi
++
++        script_arg=""
++        if [ "$(basename $script)" = "10-terminal-system-config" ]; then
++            script_arg="--update"
++        fi
++
++        return_code=0
++        "$script" "$CONFIG" "$script_arg" || return_code=$?
++        if [ $return_code -ne 0 ]; then
++            echo "Script \"$script\" returned exit code $return_code." 1>&2
++        fi
++    done
++}
++update_scripts
++
+ # Include the JWT token in the checksum to report again the
+ # configuration to the server in case of new authorization after
+ # device decommissioning or connection to a different Mender server
+-- 
+2.25.1
+

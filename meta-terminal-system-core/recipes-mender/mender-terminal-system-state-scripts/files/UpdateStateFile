@@ -1,0 +1,8 @@
+#!/bin/sh
+
+STATE_SCRIPT_STATE=
+STATE_SCRIPT_CURRENT_STATE_FILE="/data/mender/state_script_current_state"
+
+echo "${STATE_SCRIPT_STATE}" > $STATE_SCRIPT_CURRENT_STATE_FILE
+
+exit 0

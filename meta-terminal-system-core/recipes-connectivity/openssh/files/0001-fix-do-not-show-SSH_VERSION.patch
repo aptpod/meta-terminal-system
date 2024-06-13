@@ -1,0 +1,43 @@
+From 420db7943205430772bd1925d7bc035275164ae3 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Mon, 13 Feb 2023 21:48:48 +0900
+Subject: [PATCH] fix: do not show SSH_VERSION
+
+---
+ kex.c     | 6 ++----
+ ssh_api.c | 2 +-
+ 2 files changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/kex.c b/kex.c
+index 0bcd27d..52e8a7b 100644
+--- a/kex.c
++++ b/kex.c
+@@ -1229,10 +1229,8 @@ kex_exchange_identification(struct ssh *ssh, int timeout_ms,
+ 	sshbuf_reset(our_version);
+ 	if (version_addendum != NULL && *version_addendum == '\0')
+ 		version_addendum = NULL;
+-	if ((r = sshbuf_putf(our_version, "SSH-%d.%d-%.100s%s%s\r\n",
+-	    PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, SSH_VERSION,
+-	    version_addendum == NULL ? "" : " ",
+-	    version_addendum == NULL ? "" : version_addendum)) != 0) {
++	if ((r = sshbuf_putf(our_version, "SSH-%d.%d-%.100s\r\n",
++	    PROTOCOL_MAJOR_2, PROTOCOL_MINOR_2, "OpenSSH")) != 0) {
+ 		oerrno = errno;
+ 		error_fr(r, "sshbuf_putf");
+ 		goto out;
+diff --git a/ssh_api.c b/ssh_api.c
+index d3c6617..42cb032 100644
+--- a/ssh_api.c
++++ b/ssh_api.c
+@@ -410,7 +410,7 @@ _ssh_send_banner(struct ssh *ssh, struct sshbuf *banner)
+ 	char *cp;
+ 	int r;
+ 
+-	if ((r = sshbuf_putf(banner, "SSH-2.0-%.100s\r\n", SSH_VERSION)) != 0)
++	if ((r = sshbuf_putf(banner, "SSH-2.0-%.100s\r\n", "OpenSSH")) != 0)
+ 		return r;
+ 	if ((r = sshbuf_putb(ssh_packet_get_output(ssh), banner)) != 0)
+ 		return r;
+-- 
+2.25.1
+

@@ -1,0 +1,22 @@
+#!/bin/sh
+
+set -ue
+
+#
+# serial number
+#
+SERIAL_PATH=/data/serial_number
+
+if [ ! -f "$SERIAL_PATH" ]; then
+    echo "no serial number file found" >&2
+    exit 1
+fi
+
+SERIAL="$(cat $SERIAL_PATH)"
+
+if [ -z "$SERIAL" ]; then
+    echo "empty serial number" >&2
+    exit 1
+else
+    echo "serial_number=$SERIAL"
+fi

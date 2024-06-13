@@ -1,0 +1,91 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+runtime: nvidia
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /tmp/argus_socket:/tmp/argus_socket # To avoid error on gstreamer. see, https://git.aptpod.co.jp/intdash-terminal-system/os/-/issues/34#note_757982
+  - /etc/enctune.conf:/etc/enctune.conf # To enable omxh264enc. see, https://aptpod-jp.atlassian.net/wiki/spaces/INTDASHCORE/pages/1074169039/Docker+T1
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/gstreamer_h264.yml"
+environment:
+    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! videorate ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP} ! omxh264enc control-rate=2 iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} insert-sps-pps=true insert-vui=true ! video/x-h264,stream-format=byte-stream ! queue ! h264parse ! queue ! fdsink fd=1
+    DC_H264_SPLIT_FILTER_CONF_DELAY_MS: 100
+    DC_H264_SPLIT_FILTER_CONF_FORMAT: ${DC_ISCPV2COMPAT_FORMAT}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'h264'
+      display_strings_i18n:
+        - locale: jpn
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_DEVICE_PATH
+      default: '/dev/video0'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path
+          description: デバイスパスを指定することで、使用するカメラを選択
+    - key: DC_WIDTH
+      default: '1280'
+      options: ['1280', '1920']
+      display_strings_i18n:
+        - locale: jpn
+          name: Width
+          description: 取得する動画の解像度の幅
+          unit: pixel
+    - key: DC_HEIGHT
+      default: '720'
+      options: ['720', '1080']
+      display_strings_i18n:
+        - locale: jpn
+          name: Height
+          description: 取得する動画の解像度の高さ
+          unit: pixel
+    - key: DC_FPS
+      default: '15'
+      options: ['5', '10', '15', '30']
+      display_strings_i18n:
+        - locale: jpn
+          name: Frame Rate
+          description: フレームレートを選択
+          unit: fps
+    - key: DC_VIDEOFLIP
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: jpn
+          name: Video Flip
+          description: ビデオフリップを選択
+    - key: DC_BITRATE
+      default: '2000000'
+      options: ['500000', '1000000', '2000000', '3000000', '5000000', '8000000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Bitrate
+          description: ビットレートを選択
+          unit: bps
+    - key: DC_ISCPV2COMPAT_FORMAT
+      default: 'iscp_v2_compat'
+      options: ['iscp_v2_compat', 'iscp_v2_compat_byte_stream']
+      display_strings_i18n:
+        - locale: jpn
+          name: iscp-v2-compat Format
+          description: '出力するiscp-v2-compatフォーマットの選択（iscp_v2_compat:H.264 Frame、iscp_v2_compat_byte_stream:H.264 Byte Stream [非推奨]）'

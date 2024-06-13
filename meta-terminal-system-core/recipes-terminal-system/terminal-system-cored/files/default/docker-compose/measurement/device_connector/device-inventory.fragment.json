@@ -1,0 +1,9 @@
+{
+    "enabled": true,
+    "upstream_ipc_ids": [
+        "device-inventory"
+    ],
+    "downstream_ipc_ids": [],
+    "service_id": "Device Inventory",
+    "service_substitutions": []
+}

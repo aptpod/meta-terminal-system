@@ -1,0 +1,8 @@
+[Unit]
+Description=SSD mount service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+Environment="SCRIPT_ARGS=%I"
+ExecStart=/usr/bin/ssd-mount.sh $SCRIPT_ARGS

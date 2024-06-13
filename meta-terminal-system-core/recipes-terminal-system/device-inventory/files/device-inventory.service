@@ -1,0 +1,10 @@
+[Unit]
+Description=Device Inventory
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/device-inventory --daemon
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,34 @@
+#!/bin/bash
+
+set -e
+
+STATE="$1"
+FILES="$2"
+
+readonly CUSTOM_SCRIPT="$FILES"/files/custom_script.sh
+readonly CUSTOM_CONTENTS_TGZ="$FILES"/files/contents.tgz
+readonly CUSTOM_CONTENTS_DIR="$FILES"/files/contents
+readonly CUSTOM_TMP_DIR="$FILES"/tmp
+
+case "$STATE" in
+ArtifactInstall)
+    mkdir -p ${CUSTOM_CONTENTS_DIR}
+    if [ -f "${CUSTOM_CONTENTS_TGZ}" ]; then
+        tar -zxpf ${CUSTOM_CONTENTS_TGZ} -C ${CUSTOM_CONTENTS_DIR}
+    fi
+    ;&
+ArtifactCommit) ;&
+ArtifactFailure) ;&
+ArtifactReboot) ;&
+ArtifactVerifyReboot) ;&
+ArtifactRollback) ;&
+ArtifactRollbackReboot) ;&
+ArtifactRollbackVerifyReboot) ;&
+NeedsArtifactReboot) ;&
+SupportsRollback)
+    chmod u+x "${CUSTOM_SCRIPT}"
+    "${CUSTOM_SCRIPT}" "${STATE}" "${CUSTOM_CONTENTS_DIR}" "${CUSTOM_TMP_DIR}"
+    ;;
+esac
+
+exit 0

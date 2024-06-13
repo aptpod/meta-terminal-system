@@ -1,0 +1,123 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+runtime: nvidia
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /tmp/argus_socket:/tmp/argus_socket # To avoid error on gstreamer. see, https://git.aptpod.co.jp/intdash-terminal-system/os/-/issues/34#note_757982
+  - /etc/enctune.conf:/etc/enctune.conf # To enable omxh264enc. see, https://aptpod-jp.atlassian.net/wiki/spaces/INTDASHCORE/pages/1074169039/Docker+T1
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/gstreamer_h264.yml"
+environment:
+    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q compositor start-time-selection=1 background=1 name=mix sink_0::xpos=0 sink_0::ypos=0 sink_0::alpha=1 sink_0::zorder=0 sink_1::xpos=640 sink_1::ypos=0 sink_1::alpha=1 sink_1::zorder=1 sink_2::xpos=0 sink_2::ypos=480 sink_2::alpha=1 sink_2::zorder=2 sink_3::xpos=640 sink_3::ypos=480 sink_3::alpha=1 sink_3::zorder=3 ! queue ! omxh264enc iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} insert-sps-pps=true insert-vui=true profile=baseline ! video/x-h264,stream-format=byte-stream ! queue ! h264parse ! fdsink fd=1 v4l2src device=${DC_DEVICE_PATH_1} io-mode=4 ! videorate ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_1} ! mix.sink_0 v4l2src device=${DC_DEVICE_PATH_2} io-mode=4 ! videorate ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_2} ! mix.sink_1 v4l2src device=${DC_DEVICE_PATH_3} io-mode=4 ! videorate ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_3} ! mix.sink_2 v4l2src device=${DC_DEVICE_PATH_4} io-mode=4 ! videorate ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_4} ! mix.sink_3
+    DC_H264_SPLIT_FILTER_CONF_DELAY_MS: 100
+    DC_H264_SPLIT_FILTER_CONF_FORMAT: ${DC_ISCPV2COMPAT_FORMAT}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'h264(x4)'
+      display_strings_i18n:
+        - locale: jpn
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_DEVICE_PATH_1
+      default: '/dev/video0'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path for Upper Left
+          description: 左上に配置する動画の取得元として、接続されているカメラのデバイスパス
+    - key: DC_DEVICE_PATH_2
+      default: '/dev/video1'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path for Upper Right
+          description: 右上に配置する動画の取得元として、接続されているカメラのデバイスパス
+    - key: DC_DEVICE_PATH_3
+      default: '/dev/video2'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path for Lower Left
+          description: 左下に配置する動画の取得元として、接続されているカメラのデバイスパス
+    - key: DC_DEVICE_PATH_4
+      default: '/dev/video3'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: jpn
+          name: Device Path for Lower Right
+          description: 右下に配置する動画の取得元として、接続されているカメラのデバイスパス
+    - key: DC_FPS
+      default: '15'
+      options: ['15']
+      display_strings_i18n:
+        - locale: jpn
+          name: Frame Rate
+          description: フレームレートを選択
+          unit: fps
+    - key: DC_VIDEOFLIP_1
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: jpn
+          name: Video Flip for Upper Left
+          description: 左上に配置する動画のビデオフリップを選択
+    - key: DC_VIDEOFLIP_2
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: jpn
+          name: Video Flip for Upper Right
+          description: 右上に配置する動画のビデオフリップを選択
+    - key: DC_VIDEOFLIP_3
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: jpn
+          name: Video Flip for Lower Left
+          description: 左下に配置する動画のビデオフリップを選択
+    - key: DC_VIDEOFLIP_4
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: jpn
+          name: Video Flip for Lower Right
+          description: 右下に配置する動画のビデオフリップを選択
+    - key: DC_BITRATE
+      default: '2000000'
+      options: ['500000', '1000000', '2000000', '3000000', '5000000', '8000000']
+      display_strings_i18n:
+        - locale: jpn
+          name: Bitrate
+          description: ビットレートを選択
+          unit: bps
+    - key: DC_ISCPV2COMPAT_FORMAT
+      default: 'iscp_v2_compat'
+      options: ['iscp_v2_compat', 'iscp_v2_compat_byte_stream']
+      display_strings_i18n:
+        - locale: jpn
+          name: iscp-v2-compat Format
+          description: '出力するiscp-v2-compatフォーマットの選択（iscp_v2_compat:H.264 Frame、iscp_v2_compat_byte_stream:H.264 Byte Stream [非推奨]）'

@@ -1,0 +1,37 @@
+[Unit]
+Description=Terminal System Core Daemon
+After=docker.service containerd.service docker-archive-load.service ModemManager.service network.target
+Requires=docker.service containerd.service docker-archive-load.service
+RequiresMountsFor=/etc/core
+RequiresMountsFor=/var/lib/core
+
+[Service]
+Type=simple
+User=root
+Group=root
+RuntimeDirectory=core
+StateDirectory=core
+LogsDirectory=core
+ConfigurationDirectory=core
+Environment=HOME=/home/root CORE_RUN_DIR=/run/core CORE_STATE_DIR=/var/lib/core CORE_LOGS_DIR=/var/log/core CORE_CONF_DIR=/etc/core
+
+# Validate constant variables
+ExecStartPre=/bin/sh -c '/usr/bin/test $(/bin/grep root /etc/passwd | /usr/bin/cut -d ":" -f6) = "/home/root" || { /bin/echo "Unexpected home directory" 1>&2; exit 1; }'
+ExecStartPre=/bin/sh -c '/usr/bin/test ${RUNTIME_DIRECTORY} = ${CORE_RUN_DIR} || { /bin/echo "Unexpected runtime directory" 1>&2; exit 1; }'
+ExecStartPre=/bin/sh -c '/usr/bin/test ${STATE_DIRECTORY} = ${CORE_STATE_DIR} || { /bin/echo "Unexpected state directory" 1>&2; exit 1; }'
+ExecStartPre=/bin/sh -c '/usr/bin/test ${LOGS_DIRECTORY} = ${CORE_LOGS_DIR} || { /bin/echo "Unexpected log directory" 1>&2; exit 1; }'
+ExecStartPre=/bin/sh -c '/usr/bin/test ${CONFIGURATION_DIRECTORY} = ${CORE_CONF_DIR} || { /bin/echo "Unexpected configuration directory" 1>&2; exit 1; }'
+
+# Initialize CORE_STATE_DIR, if needed
+ExecStartPre=/bin/sh -c "/usr/bin/test -f ${CORE_STATE_DIR}/.initialized || { find ${CORE_STATE_DIR} -maxdepth 1 -mindepth 1 -exec rm -rf {} \; && find ${CORE_CONF_DIR}/default -maxdepth 1 -mindepth 1 -exec cp -a {} ${CORE_STATE_DIR}/ \; && touch ${CORE_STATE_DIR}/.initialized; }"
+
+# Start service
+ExecStartPre=/usr/bin/install -d -m 0777 ${CORE_RUN_DIR}/intdash
+ExecStartPre=/usr/bin/install -d -m 0777 ${CORE_STATE_DIR}/intdash
+ExecStart=/usr/bin/cored serve --static-server-maps /third_party_notices/inherent:/usr/share/common-licenses --static-server-maps /third_party_notices/extra:/usr/share/licenses
+KillMode=mixed
+TimeoutStopSec=45
+
+[Install]
+WantedBy=multi-user.target
+Alias=cored.service

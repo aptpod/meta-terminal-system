@@ -1,0 +1,13 @@
+[Unit]
+Description=Bind Mount for /var/lib/bluetooth
+RequiresMountsFor=/data
+Before=local-fs.target
+
+[Mount]
+What=/data/var/lib/bluetooth
+Where=/var/lib/bluetooth
+Type=none
+Options=bind
+
+[Install]
+WantedBy=multi-user.target

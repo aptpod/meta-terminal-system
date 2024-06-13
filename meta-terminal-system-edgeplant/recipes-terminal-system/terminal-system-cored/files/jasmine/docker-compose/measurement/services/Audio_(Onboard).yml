@@ -1,0 +1,67 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+runtime: nvidia
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+privileged: true
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /tmp/argus_socket:/tmp/argus_socket # To avoid error on gstreamer. see, https://git.aptpod.co.jp/intdash-terminal-system/os/-/issues/34#note_757982
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/gstreamer_pcm.yml"
+environment:
+    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q alsasrc device=hw:1 ! audioconvert ! audio/x-raw,format=${DC_AUDIO_FORMAT},rate=48000,channels=1 ! fdsink fd=1
+    DC_PCM_SPLIT_FILTER_CONF_DELAY_MS: 0
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_ELEMENT: y Jack-state
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_IFACE: mixer
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_FORMAT: ${DC_AUDIO_FORMAT}
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_RATE: 48000
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_CHANNELS: 1
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_VOLUME_IFACE: mixer
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_VOLUME_ELEMENT: y Mic Capture Volume
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_VOLUME_VALUE: ${DC_AUDIO_VOLUME}
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_BOOST_ELEMENT: y Mic Boost Capture Volume
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_BOOST_VALUE: ${DC_AUDIO_BOOST}
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_SYNC_PERIOD_S: ""
+    DC_PCM_SPLIT_FILTER_CONF_PATH: /dev/snd/by-path/platform-sound
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: jpn
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'audio(onboard)'
+      display_strings_i18n:
+        - locale: jpn
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_AUDIO_FORMAT
+      default: 'S16LE'
+      options: ['S16LE', 'S32LE', 'F32LE']
+      display_strings_i18n:
+        - locale: jpn
+          name: Format
+          description: 音声データの形式
+    - key: DC_AUDIO_VOLUME
+      default: '20'
+      validation: '^([0-9]|1[0-9]|20)$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Volume
+          description: 音声データの音量(0-20で指定、1上げるごとに1.00 dB上昇、0のときは 0.00 dB設定)
+    - key: DC_AUDIO_BOOST
+      default: '1'
+      validation: '^[0-3]$'
+      display_strings_i18n:
+        - locale: jpn
+          name: Volume
+          description: 音声データのブースト (0:-20.00 dB(ミュート)、1:0.00 dB(ブーストなし)、2:20.00 dB、3:30.00 dB)

@@ -1,0 +1,14 @@
+[Unit]
+Description=Mender shutdown update service
+After=mender-client.service
+Requires=mender-client.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+# Clearing control map is performed by state script
+#ExecStart=/usr/bin/mender-device-api-update-controlmap.sh clear
+ExecStop=/usr/bin/mender-shutdown-update.sh
+
+[Install]
+WantedBy=multi-user.target

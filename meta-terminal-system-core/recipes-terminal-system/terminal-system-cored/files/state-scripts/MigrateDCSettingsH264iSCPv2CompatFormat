@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Add 'DC_ISCPV2COMPAT_FORMAT=iscp_v2_compat_byte_stream' to the device connector settings
+# in versions 1.0.x which do not support H.264 Frame.
+
+function check_os_version() {
+    os_version="$(cat /etc/os-release | grep VERSION_ID | sed -e 's/^VERSION_ID=\(.*\)$/\1/')"
+
+    if [[ ! $os_version =~ 1\.0\.[0-9]+ ]]; then
+        exit 0
+    fi
+}
+
+function update_device_connectors() {
+    json="$(curl --fail-with-body -sSL http://localhost:8081/api/device_connectors)"
+    updated_json="$(echo "$json" | jq 'map(if .service_id | test("H\\.264 for EDGEPLANT USB Camera") then .service_substitutions += ["DC_ISCPV2COMPAT_FORMAT=iscp_v2_compat_byte_stream"] else . end)')"
+
+    echo "$updated_json" | jq -c '.[] | select(.service_id | test("H\\.264 for EDGEPLANT USB Camera"))' | while read -r line; do
+        id="$(echo $line | jq -cr '.id')"
+        service_substitutions="$(echo $line | jq -c '.service_substitutions')"
+
+        echo "[INFO] add service_substitutions 'DC_ISCPV2COMPAT_FORMAT=iscp_v2_compat_byte_stream' to device connector $id"
+        curl --fail-with-body -sSL -X PATCH -d "{\"service_substitutions\": $service_substitutions}" "http://localhost:8081/api/device_connectors/$id"
+    done
+}
+
+check_os_version
+update_device_connectors

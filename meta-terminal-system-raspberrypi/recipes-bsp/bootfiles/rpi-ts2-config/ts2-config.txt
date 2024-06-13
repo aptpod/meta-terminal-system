@@ -1,0 +1,33 @@
+# =============================================================================
+# Terminal System 2 Provisioning Settings
+# =============================================================================
+# All settings should be enclosed in single quotes (').
+
+# -----------------------------------------------------------------------------
+# API password configs
+# -----------------------------------------------------------------------------
+# You can generate API_USER_PASS_XXXX with openssl.
+#   $ echo p@ssword | openssl passwd -apr1 -stdin
+#
+API_USER_PASS_ADMIN=''
+API_USER_PASS_USER=''
+
+# -----------------------------------------------------------------------------
+# User password configs
+# -----------------------------------------------------------------------------
+# You can generate USER_PASS_XXXX with openssl.
+#   $ echo p@ssword | openssl passwd -6 -stdin
+#
+USER_PASS_ROOT=''
+USER_PASS_ADMIN=''
+USER_PASS_MAINT=''
+
+# -----------------------------------------------------------------------------
+# Mender Server configs
+# -----------------------------------------------------------------------------
+# Uncomment out if setting.
+#
+#OPT_USE_MENDER='true'
+#OPT_SERIAL_NUMBER='<raspberry pi serial>'
+#OPT_MENDER_SERVER_URL='https://hosted.mender.io'
+MENDER_TENANT_TOKEN=''

@@ -1,0 +1,193 @@
+EM7430:
+  - name: "MA251.A.BI.001"
+    bands:
+      umts: ["B1", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41"]
+
+  - name: "MA251.A.BI.001 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "GSA.8822.B.301111"
+    bands:
+      umts: ["B1", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B41"]
+
+  - name: "GSA.8822.B.301111 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "TG.09.0113"
+    bands:
+      umts: ["B1", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41"]
+
+  - name: "TG.09.0113 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "TG.30.8113"
+    bands:
+      umts: ["B1", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19", "B21"]
+      lte_tdd: ["B39", "B41"]
+
+  - name: "TG.30.8113 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19", "B21"]
+      lte_tdd: []
+
+  - name: "TG.35.8113"
+    bands:
+      umts: ["B1", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19", "B21"]
+      lte_tdd: ["B39", "B41"]
+
+  - name: "TG.35.8113 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19", "B21"]
+      lte_tdd: []
+
+  - name: "YOZ-52160"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19", "B21"]
+      lte_tdd: ["B41"]
+
+  - name: "YOZ-52160 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19", "B21"]
+      lte_tdd: []
+
+  - name: "YOZ-52341"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B8", "B18", "B19", "B21"]
+      lte_tdd: []
+
+  - name: "YOZ-52341 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B8", "B18", "B19", "B21"]
+      lte_tdd: []
+
+  - name: "YOZ-52544"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B7", "B8", "B18", "B19", "B21"]
+      lte_tdd: ["B38", "B39", "B40", "B41"]
+
+  - name: "YOZ-52544 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B7", "B8", "B18", "B19", "B21"]
+      lte_tdd: []
+
+EM7431:
+  - name: "MA251.A.BI.001"
+    bands:
+      umts: ["B1", "B6", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41"]
+
+  - name: "MA251.A.BI.001 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "GSA.8822.B.301111"
+    bands:
+      umts: ["B1", "B6", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41"]
+
+  - name: "GSA.8822.B.301111 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "TG.09.0113"
+    bands:
+      umts: ["B1", "B6", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41", "B42"]
+
+  - name: "TG.09.0113 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "TG.30.8113"
+    bands:
+      umts: ["B1", "B6", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41", "B42"]
+
+  - name: "TG.30.8113 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "TG.35.8113"
+    bands:
+      umts: ["B1", "B6", "B19"]
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B39", "B41", "B42"]
+
+  - name: "TG.35.8113 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "YOZ-52160"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: ["B41", "B42"]
+
+  - name: "YOZ-52160 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "YOZ-52341"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "YOZ-52341 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B8", "B18", "B19"]
+      lte_tdd: []
+
+  - name: "YOZ-52544"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B7", "B8", "B18", "B19"]
+      lte_tdd: ["B38", "B39", "B40", "B41", "B42", "B43"]
+
+  - name: "YOZ-52544 (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B7", "B8", "B18", "B19"]
+      lte_tdd: []

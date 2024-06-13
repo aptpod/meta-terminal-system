@@ -1,0 +1,13 @@
+#!/bin/sh
+
+# Automatically commit device connectors at next boot.
+
+NEXT_BOOT_YML="/var/lib/core/.next_boot.yml"
+
+touch $NEXT_BOOT_YML
+
+if grep -q "commit_device_connectors:" $NEXT_BOOT_YML; then
+    sed -i 's/commit_device_connectors:.*/commit_device_connectors: true/' $NEXT_BOOT_YML
+else
+    echo -e "\ncommit_device_connectors: true" >>$NEXT_BOOT_YML
+fi

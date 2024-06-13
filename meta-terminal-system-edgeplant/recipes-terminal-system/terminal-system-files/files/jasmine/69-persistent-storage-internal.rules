@@ -1,0 +1,3 @@
+# NOTE: Unmounting is not supported
+KERNEL=="sd[a-z]1", ENV{DEVPATH}=="*3507000.ahci-sata*", SUBSYSTEM=="block", ENV{ID_TYPE}=="disk", ENV{ID_BUS}=="ata", ACTION=="add", \
+TAG+="systemd", ENV{SYSTEMD_WANTS}+="ssd-mount@%k.service"

@@ -1,0 +1,43 @@
+From 02be319e0488a570dc59aa471599f6f95b220798 Mon Sep 17 00:00:00 2001
+From: ochiai <ochiai@aptpod.co.jp>
+Date: Wed, 25 Oct 2023 08:36:38 +0900
+Subject: [PATCH] Revert "bugfix issie 18826: containers do not restart after
+ reboot when bound to virtual network interface"
+
+This reverts commit dfa4e77d8202f5c682056b59be3111eccddfb09a.
+---
+ src/import/contrib/init/systemd/docker.service     | 3 +--
+ src/import/contrib/init/systemd/docker.service.rpm | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
+
+diff --git a/src/import/contrib/init/systemd/docker.service b/src/import/contrib/init/systemd/docker.service
+index 517463172b..41a6627997 100644
+--- a/src/import/contrib/init/systemd/docker.service
++++ b/src/import/contrib/init/systemd/docker.service
+@@ -1,8 +1,7 @@
+ [Unit]
+ Description=Docker Application Container Engine
+ Documentation=https://docs.docker.com
+-After=network-online.target docker.socket firewalld.service
+-Wants=network-online.target
++After=network.target docker.socket firewalld.service
+ Requires=docker.socket
+ 
+ [Service]
+diff --git a/src/import/contrib/init/systemd/docker.service.rpm b/src/import/contrib/init/systemd/docker.service.rpm
+index 6c60646b56..7ff27e8a54 100644
+--- a/src/import/contrib/init/systemd/docker.service.rpm
++++ b/src/import/contrib/init/systemd/docker.service.rpm
+@@ -1,8 +1,7 @@
+ [Unit]
+ Description=Docker Application Container Engine
+ Documentation=https://docs.docker.com
+-After=network-online.target firewalld.service
+-Wants=network-online.target
++After=network.target firewalld.service
+ 
+ [Service]
+ Type=notify
+-- 
+2.37.1 (Apple Git-137.1)
+

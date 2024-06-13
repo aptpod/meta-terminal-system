@@ -1,0 +1,11 @@
+# Band presets are device specific.
+# If you use a mobile connection, please add them with bbappend.
+#
+# e.g.
+# EM7430:
+#   - name: "MA251.A.BI.001"
+#     bands:
+#       umts: ["B1", "B8", "B19"]
+#       lte_fdd: ["B1", "B3", "B8", "B18", "B19"]
+#       lte_tdd: ["B39", "B41"]
+# ...

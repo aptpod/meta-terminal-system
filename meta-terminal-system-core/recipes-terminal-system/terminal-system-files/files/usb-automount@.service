@@ -1,0 +1,7 @@
+[Unit]
+Description=USB auto mount service
+
+[Service]
+Type=simple
+Environment="SCRIPT_ARGS=%I"
+ExecStart=/usr/bin/usb-automount.sh $SCRIPT_ARGS

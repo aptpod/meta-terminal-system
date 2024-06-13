@@ -1,0 +1,14 @@
+[Unit]
+Description=SSD Initialize Service
+RequiresMountsFor=/data
+After=ssd-mount@sda1.service
+Requires=ssd-mount@sda1.service
+Before=docker.service terminal-system-cored.service
+ConditionPathExists=!/data/.ssd_initialized
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/ssd-initialize.sh
+
+[Install]
+WantedBy=multi-user.target
