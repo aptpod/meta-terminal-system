@@ -9,13 +9,12 @@ services:
       timeout: 5s
       retries: 3
       start_period: 60s
+    network_mode: host
     command: intdash-agentd serve -l info --port 50051 --grpc-reflection --info-duration-to-ignore 5
     stop_grace_period: 60s
     volumes:
       - /var/run/core/intdash:/var/run/intdash
       - /var/lib/core/intdash:/var/lib/intdash
-    networks:
-      - intdash
 
   terminal-display-client:
     image: ${BASE_URI}/${IMAGE_NAME_TERMINAL_DISPLAY_CLIENT}:${IMAGE_TAG_TERMINAL_DISPLAY_CLIENT}
@@ -26,6 +25,3 @@ services:
       - /dev:/dev
       - /run/terminal-display:/run/terminal-display
       - /etc/terminal-display:/etc/terminal-display
-
-networks:
-  intdash:

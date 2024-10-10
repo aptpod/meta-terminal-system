@@ -9,19 +9,12 @@ services:
       timeout: 1s
       retries: 1
       start_period: 10s
-    command: intdash-agentctl run --address system-intdash-edge-agent2-1:50051
+    network_mode: host
+    command: intdash-agentctl run --address localhost:50051
     stop_grace_period: 30s
     volumes:
       - /var/run/core/intdash:/var/run/intdash
       - /var/lib/core/intdash:/var/lib/intdash
-    networks:
-      - intdash
 
 volumes:
   intdash-lock:
-
-
-networks:
-  intdash:
-    name: system_intdash
-    external: true
