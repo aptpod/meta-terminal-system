@@ -31,6 +31,11 @@ do_install:append:jasmine() {
     install -m 0644 ${WORKDIR}/ssd-initialize.service ${D}${systemd_system_unitdir}/ssd-initialize.service
 }
 
+RDEPENDS:${PN}:append:jasmine = " \
+    gptfdisk \
+    e2fsprogs \
+"
+
 SYSTEMD_SERVICE:${PN}:append:jasmine = " \
 ssd-mount@.service \
 ssd-initialize.service \

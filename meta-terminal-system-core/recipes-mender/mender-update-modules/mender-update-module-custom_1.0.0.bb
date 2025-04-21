@@ -16,7 +16,13 @@ FILES:${PN} += "${datadir}/mender/modules/v3/custom"
 
 inherit allarch
 
+CUSTOM_CONTENTS_TGZ_TMP ?= ""
+
 do_install() {
     install -d ${D}/${datadir}/mender/modules/v3
     install -m 755 ${S}/module/custom ${D}/${datadir}/mender/modules/v3/custom
+
+    sed -i \
+        -e 's:@CUSTOM_CONTENTS_TGZ_TMP@:${CUSTOM_CONTENTS_TGZ_TMP}:' \
+        ${D}/${datadir}/mender/modules/v3/custom
 }

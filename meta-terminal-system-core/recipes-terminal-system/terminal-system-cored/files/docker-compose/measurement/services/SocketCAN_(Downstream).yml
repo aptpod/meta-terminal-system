@@ -13,7 +13,7 @@ command:
 environment:
     DC_SOCKETCAN_SRC_CONF_INTERFACE_NAME: ${DC_INTERFACE}
     DC_SOCKETCAN_SRC_CONF_SOCKETCAN_OPTIONS_FD: ${DC_FD}
-    DC_SOCKETCAN_INIT_OPTIONS_LISTENONLY: ${DC_LISTENONLY}
+    DC_SOCKETCAN_INIT_OPTIONS_LISTENONLY: 'off'
     DC_SOCKETCAN_INIT_OPTIONS_FD_NON_ISO: ${DC_FD_NON_ISO}
     DC_SOCKETCAN_INIT_OPTIONS_BITRATE: ${DC_BITRATE}
     DC_SOCKETCAN_INIT_OPTIONS_SAMPLE_POINT: ${DC_SAMPLE_POINT}
@@ -60,13 +60,6 @@ substitution_variables:
         - locale: jpn
           name: CAN FD
           description: CAN FDの有効（true）／無効（false）
-    - key: DC_LISTENONLY
-      default: 'off'
-      options: ['on', 'off']
-      display_strings_i18n:
-        - locale: jpn
-          name: Listen Only
-          description: Listen Onlyモードの有効（on）／無効（off）
     - key: DC_FD_NON_ISO
       default: 'off'
       options: ['on', 'off']

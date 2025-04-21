@@ -13,14 +13,14 @@ command:
     - "/etc/dc_conf/apt_cantrx.yml"
 environment:
     DC_APT_CANTRX_SRC_CONF_PATH: ${DC_DEVICE_PATH}
-    DC_APT_CANTRX_SRC_CONF_LISTENONLY: ${DC_LISTENONLY}
+    DC_APT_CANTRX_SRC_CONF_LISTENONLY: 0
     DC_APT_CANTRX_SRC_CONF_BAUDRATE: ${DC_BAUDRATE}
     DC_APT_CANTRX_SRC_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
     DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
     DC_FILE_SRC_CONF_PATH: ${DC_DOWNSTREAM_FIFO_0}
     DC_APT_CANTRX_SINK_CONF_PATH: ${DC_DEVICE_PATH}
-    DC_APT_CANTRX_SINK_CONF_LISTENONLY: ${DC_LISTENONLY}
+    DC_APT_CANTRX_SINK_CONF_LISTENONLY: 0
     DC_APT_CANTRX_SINK_CONF_BAUDRATE: ${DC_BAUDRATE}
     DC_APT_CANTRX_SINK_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
 
@@ -63,13 +63,6 @@ substitution_variables:
         - locale: jpn
           name: Timestamp Mode
           description: 受信したデータに対して、タイムスタンプをどのように付与するか
-    - key: DC_LISTENONLY
-      default: '0'
-      options: ['0', '1']
-      display_strings_i18n:
-        - locale: jpn
-          name: Listen Only
-          description: CAN-USB InterfaceからCANバスにACKを送信するかどうか（0:ACKあり、1:ACKなし）
     - key: DC_BAUDRATE
       default: '500'
       options: ['125', '250', '500', '1000']

@@ -29,6 +29,16 @@ prepare_datafile() {
     mount ${DATAFILE} /mnt/datafile
 
     if [ "\${OPT_USE_MENDER}" = "false" ]; then
+        if [ x != x\${SERIAL_NUMBER} ]; then
+            echo "writing serial number \"\${SERIAL_NUMBER}\" to data partition"
+            echo "\${SERIAL_NUMBER}" > /mnt/datafile/serial_number
+        else
+            echo "clear serial number"
+            echo "" > /mnt/datafile/serial_number
+        fi
+
+        echo "clear mender server url and token"
+        echo "[INFO] The default Mender server URL has been removed. When provisioning with Mender enabled using the same image, it is necessary to configure the Mender server URL."
         mender_conf=\$(echo "{\"ServerURL\":\"\",\"TenantToken\":\"\"}")
         mender_conf=\$(jq ". * \${mender_conf}" /mnt/datafile/mender/mender.conf)
         printf "%s" "\${mender_conf}" > /mnt/datafile/mender/mender.conf
@@ -88,9 +98,15 @@ if [ "\$(id -u)" -ne 0 ]; then
     echo "Please run as root."
     exit 1
 fi
-for cmd in jq; do
+for cmd in python jq; do
     if ! which \${cmd} >/dev/null 2>&1; then
-        echo "This installer requires '\${cmd}' to run."
+        echo "This installer requires '\${cmd}' command."
+        exit 1
+    fi
+done
+for pkg in qemu-user-static; do
+    if ! dpkg -l | grep -q "\${pkg}"; then
+        echo "This installer requires '\${pkg}' package."
         exit 1
     fi
 done

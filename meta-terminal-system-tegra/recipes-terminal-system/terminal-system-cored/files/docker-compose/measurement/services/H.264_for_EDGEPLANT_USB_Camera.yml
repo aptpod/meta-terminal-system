@@ -14,7 +14,7 @@ command:
     - --config
     - "/etc/dc_conf/gstreamer_h264.yml"
 environment:
-    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! videorate ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP} ! omxh264enc control-rate=2 iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} insert-sps-pps=true insert-vui=true ! video/x-h264,stream-format=byte-stream ! queue ! h264parse ! queue ! fdsink fd=1
+    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP} ! omxh264enc control-rate=2 iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} insert-sps-pps=true insert-vui=true ! video/x-h264,stream-format=byte-stream ! queue ! h264parse ! queue ! fdsink fd=1
     DC_H264_SPLIT_FILTER_CONF_DELAY_MS: 100
     DC_H264_SPLIT_FILTER_CONF_FORMAT: ${DC_ISCPV2COMPAT_FORMAT}
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}

@@ -167,7 +167,7 @@ class TerminalSystemCoreUtils:
         self.api_list.append(
             "network_connections",
             "/network_connections",
-            ModifyMethod.PUT,
+            ModifyMethod.PATCH,
             needs_reboot=True,
         )
         self.api_list.append(
@@ -229,20 +229,6 @@ class TerminalSystemCoreUtils:
             "/ip_allowlist",
             ModifyMethod.PUT,
         )
-        self.api_list.append(
-            "api_users.admin",
-            "/api_users/admin",
-            ModifyMethod.PATCH,
-            support_get=False,
-            hidden_config=True,
-        )
-        self.api_list.append(
-            "api_users.user",
-            "/api_users/user",
-            ModifyMethod.PATCH,
-            support_get=False,
-            hidden_config=True,
-        )
         self.api_list.append("docker.composes", "/docker/composes", ModifyMethod.PATCH)
 
     def __get_id(self, d):
@@ -250,14 +236,6 @@ class TerminalSystemCoreUtils:
             if id in d:
                 return d[id]
         return None
-
-    def __sort_dict(self, d):
-        for k, v in d.items():
-            if isinstance(v, dict):
-                d[k] = self.__sort_dict(v)
-            elif isinstance(v, list):
-                d[k] = sorted(v)
-        return dict(sorted(d.items()))
 
     def __parse_lists(self, json_mender, json_current):
         added_list = []
@@ -275,7 +253,7 @@ class TerminalSystemCoreUtils:
                     cur_id = self.__get_id(cur)
                     if new_id == cur_id:
                         found = True
-                        if self.__sort_dict(new) != self.__sort_dict(cur):
+                        if new != cur:
                             modify = True
 
             if found:
@@ -516,16 +494,6 @@ class TerminalSystemCoreUtils:
                 res = requests.get(self.api_list.endpoint(key), auth=self.auth)
                 if res.ok:
                     value = res.json()
-                    if isinstance(value, list):
-                        # sort dict
-                        for d in value:
-                            d = self.__sort_dict(d)
-
-                        # sort list
-                        for id in self.ids:
-                            has_id = any(id in d for d in value)
-                            if has_id:
-                                value = sorted(value, key=lambda x: x[id])
                     configs_current[key] = json.dumps(value)
                 else:
                     logging.error(f'failed to get config "{key}", res = {res}')

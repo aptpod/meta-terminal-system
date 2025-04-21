@@ -1,8 +1,8 @@
 [Unit]
 Description=SSD Initialize Service
 RequiresMountsFor=/data
-After=ssd-mount@sda1.service
-Requires=ssd-mount@sda1.service
+After=media-ssd.mount
+Requires=media-ssd.mount
 Before=docker.service terminal-system-cored.service
 ConditionPathExists=!/data/.ssd_initialized
 

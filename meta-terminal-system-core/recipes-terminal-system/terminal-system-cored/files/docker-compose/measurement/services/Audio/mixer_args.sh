@@ -12,15 +12,16 @@ for device in ${device_paths}; do
 
   mixers=$(echo "${alsa_list}" | jq -r ".cards[] | select(.by_path == \"${device}\") | .mixer_controls // {} | keys[]")
   if [ -z "${mixers}" ]; then
-    continue
+    validation='^$'
+  else
+    key_validation=
+    for mixer in ${mixers}; do
+      key_validation+="|${mixer}"
+    done
+    validation="^((${key_validation:1})=[0-9]{1,3}%,?)*\$"
   fi
 
-  key_validation=
-  for mixer in ${mixers}; do
-    key_validation+="|${mixer}"
-  done
-
-  conditional_options+="{\"preconditions\":[\"DC_DEVICE_PATH=${device}\"],\"validation\":\"^((${key_validation:1})=[0-9]{1,3}%,?)*\$\"}"
+  conditional_options+="{\"preconditions\":[\"DC_DEVICE_PATH=${device}\"],\"validation\":\"${validation}\"}"
 done
 
 echo "${conditional_options}" | jq -cs

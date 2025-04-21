@@ -11,7 +11,7 @@ DEVICE_SPECIFIC_LONG_OPTS+=",tegrastats"
 
 function edgeplant_powermanage_cmd() {
     local cmd="$1"
-    flock --timeout $POWERMANAGE_TIMEOUT $POWERMANAGE_LOCK_PATH -c "/usr/bin/edgeplant-l4t/edgeplant_powermanage $cmd" || true
+    flock --timeout $POWERMANAGE_TIMEOUT $POWERMANAGE_LOCK_PATH -c "/usr/bin/timeout 1 /usr/bin/edgeplant-l4t/edgeplant_powermanage $cmd" || true
 }
 
 function collect_content_firmware_device_specific_powermanage() {

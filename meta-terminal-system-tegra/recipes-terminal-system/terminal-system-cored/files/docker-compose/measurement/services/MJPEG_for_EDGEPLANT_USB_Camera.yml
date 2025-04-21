@@ -14,7 +14,7 @@ command:
     - --config
     - "/etc/dc_conf/gstreamer_jpeg.yml"
 environment:
-    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! videorate ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! queue ! fdsink fd=1
+    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! queue ! fdsink fd=1
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
     DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
 

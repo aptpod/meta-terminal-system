@@ -59,7 +59,7 @@ TERMINAL_SYSTEM_CONNECTOR = "\
     kernel-modules-pcan \
     alsa-utils \
     alsa-tools \
-    canutils \
+    can-utils \
 "
 
 TERMINAL_SYSTEM_DOCKER = "\

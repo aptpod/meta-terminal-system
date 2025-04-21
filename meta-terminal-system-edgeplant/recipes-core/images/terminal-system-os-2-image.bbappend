@@ -10,5 +10,3 @@ TERMINAL_IMAGE_EXTRA_INSTALL:append:jasmine = " fuse-exfat exfat-utils"
 # volume save
 TERMINAL_IMAGE_EXTRA_INSTALL:append:jasmine = " alsa-state"
 
-# ssd initialize
-TERMINAL_IMAGE_EXTRA_INSTALL:append:jasmine = " gptfdisk e2fsprogs"
