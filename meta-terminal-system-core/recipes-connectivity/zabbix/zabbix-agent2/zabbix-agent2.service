@@ -1,0 +1,21 @@
+[Unit]
+Description=Zabbix Agent 2
+After=syslog.target
+After=network.target
+
+[Service]
+Environment="CONFFILE=/etc/zabbix/zabbix_agent2.conf"
+EnvironmentFile=-/etc/default/zabbix-agent2
+Type=simple
+Restart=on-failure
+KillMode=control-group
+ExecStart=@SBINDIR@/zabbix_agent2 -c $CONFFILE
+RestartSec=10s
+# We run zabbix as root to be able to access tegrastats.power.VDD_* and fs2.fw.powermanage.
+# User=zabbix
+# Group=zabbix
+LimitNOFILE=8192
+RuntimeDirectory=zabbix
+
+[Install]
+WantedBy=multi-user.target

@@ -23,45 +23,45 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'mjpeg(v4l2-src)'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_DEVICE_PATH
       default: '/dev/video0'
       path_glob:
         - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
         - /dev/video*
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path
-          description: デバイスパスを指定することで、使用するカメラを選択
+          description: カメラのデバイスパス
     - key: DC_WIDTH
       default: '640'
       options: ['640']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Width
-          description: 取得する動画の解像度の幅
+          description: 動画の幅
           unit: pixel
     - key: DC_HEIGHT
       default: '480'
       options: ['480']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Height
-          description: 取得する動画の解像度の高さ
+          description: 動画の高さ
           unit: pixel
     - key: DC_FPS
       default: '15'
       options: ['1', '5', '10', '15', '30']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Frame Rate
-          description: フレームレートを選択
+          description: フレームレート
           unit: fps

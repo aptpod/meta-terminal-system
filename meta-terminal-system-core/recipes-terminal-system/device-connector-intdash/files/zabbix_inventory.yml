@@ -1,0 +1,323 @@
+task:
+  - id: 1
+    element: zabbix-src
+    conf:
+      address: 0.0.0.0:10051
+      inventories:
+      - key: system.cpu.load[,avg1]
+        value_type: float64
+      - key: system.cpu.load[,avg5]
+        value_type: float64
+      - key: system.cpu.load[,avg15]
+        value_type: float64
+      - key: system.swap.in[,pages]
+        value_type: int64
+      - key: system.swap.out[,pages]
+        value_type: int64
+      - key: system.cpu.util[,user,avg1]
+        value_type: float64
+      - key: system.cpu.util[,system,avg1]
+        value_type: float64
+      - key: system.cpu.util[,idle,avg1]
+        value_type: float64
+      - key: system.cpu.util[,iowait,avg1]
+        value_type: float64
+      - key: system.cpu.util[,steal,avg1]
+        value_type: float64
+      - key: system.cpu.util[,interrupt,avg1]
+        value_type: float64
+      - key: system.cpu.switches
+        value_type: int64
+      - key: vfs.dev.read[,sectors]
+        value_type: int64
+      - key: vfs.dev.write[,sectors]
+        value_type: int64
+      - key: system.swap.size[,used]
+        value_type: int64
+      - key: vm.memory.size[total]
+        value_type: int64
+      - key: vm.memory.size[free]
+        value_type: int64
+      - key: vm.memory.size[used]
+        value_type: int64
+      - key: vm.memory.size[inactive]
+        value_type: int64
+      - key: vm.memory.size[active]
+        value_type: int64
+      - key: vfs.fs.size[/,pused]
+        value_type: float64
+      - key: vfs.fs.size[/,free]
+        value_type: float64
+      - key: vfs.fs.size[/,used]
+        value_type: float64
+      - key: vfs.fs.size[/data,pused]
+        value_type: float64
+      - key: vfs.fs.size[/data,free]
+        value_type: float64
+      - key: vfs.fs.size[/data,used]
+        value_type: float64
+      - key: net.if.out[wwan0,bytes]
+        value_type: int64
+      - key: net.if.in[wwan0,bytes]
+        value_type: int64
+      - key: net.if.out[eth0,bytes]
+        value_type: int64
+      - key: net.if.in[eth0,bytes]
+        value_type: int64
+      - key: net.if.out[wlan0,bytes]
+        value_type: int64
+      - key: net.if.in[wlan0,bytes]
+        value_type: int64
+      - key: net.rtt["ntp.intdash.jp"]
+        value_type: float64
+      - key: system.hw.devices[usb]
+        value_type: string
+      - key: proc.top[1]
+        value_type: string
+      - key: proc.top[2]
+        value_type: string
+      - key: proc.top[3]
+        value_type: string
+      - key: intdash.agent2.measurements[/var/run/core/intdash/agentd.sock]
+        value_type: json
+      - key: intdash.agent2.upstream.state[/var/run/core/intdash/agentd.sock]
+        value_type: json
+      - key: intdash.agent2.downstream.state[/var/run/core/intdash/agentd.sock]
+        value_type: json
+      - key: intdash.agent2.device_connector_upstream.state[/var/run/core/intdash/agentd.sock]
+        value_type: json
+      - key: intdash.agent2.device_connector_downstream.state[/var/run/core/intdash/agentd.sock]
+        value_type: json
+      - key: intdash.agent2.deferred_upload.state[/var/run/core/intdash/agentd.sock]
+        value_type: json
+      - key: ts2.fw.apt_usbtrx[all]
+        value_type: json
+      - key: ts2.fw.terminal_display
+        value_type: json
+      - key: ts2.gps.fix
+        value_type: json
+      - key: ts2.custom[all]
+        value_type: json
+$(DC_ZABBIX_SRC_INVENTORY_EXTENSION)
+
+  - id: 2
+    element: json-conditional-aggregate-filter
+    from: [ [1] ]
+    conf:
+      output_policy:
+        interval_ms: 10000
+      aggregation_rules:
+      - dst_key: top[0].load_1m
+        src_key: '"system.cpu.load[,avg1]"'
+      - dst_key: top[0].load_5m
+        src_key: '"system.cpu.load[,avg5]"'
+      - dst_key: top[0].load_15m
+        src_key: '"system.cpu.load[,avg15]"'
+      - dst_key: top[0].cpu_idle
+        src_key: '"system.cpu.util[,idle,avg1]"'
+      - dst_key: top[0].cpu_wait
+        src_key: '"system.cpu.util[,iowait,avg1]"'
+      - dst_key: top[0].mem_total
+        src_key: '"vm.memory.size[total]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.000000953674316
+      - dst_key: top[0].mem_used
+        src_key: '"vm.memory.size[used]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.000000953674316
+      - dst_key: vmstat.swap_in
+        src_key: '"system.swap.in[,pages]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.001
+      - dst_key: vmstat.swap_out
+        src_key: '"system.swap.out[,pages]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.001
+      - dst_key: vmstat.user_time
+        src_key: '"system.cpu.util[,user,avg1]"'
+      - dst_key: vmstat.system_time
+        src_key: '"system.cpu.util[,system,avg1]"'
+      - dst_key: vmstat.idle_time
+        src_key: '"system.cpu.util[,idle,avg1]"'
+      - dst_key: vmstat.io_wait_time
+        src_key: '"system.cpu.util[,iowait,avg1]"'
+      - dst_key: vmstat.stolen_time
+        src_key: '"system.cpu.util[,steal,avg1]"'
+      - dst_key: vmstat.interrupts
+        src_key: '"system.cpu.util[,interrupt,avg1]"'
+      - dst_key: vmstat.context_switches
+        src_key: '"system.cpu.switches"'
+      - dst_key: vmstat.blocks_in
+        src_key: '"vfs.dev.read[,sectors]"'
+      - dst_key: vmstat.blocks_out
+        src_key: '"vfs.dev.write[,sectors]"'
+      - dst_key: vmstat.virtual_mem_used
+        src_key: '"system.swap.size[,used]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.001
+      - dst_key: vmstat.free_mem
+        src_key: '"vm.memory.size[free]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.001
+      - dst_key: vmstat.inactive_mem
+        src_key: '"vm.memory.size[inactive]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.001
+      - dst_key: vmstat.active_mem
+        src_key: '"vm.memory.size[active]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.001
+      - dst_key: df./.use_percent
+        src_key: '"vfs.fs.size[/,pused]"'
+      - dst_key: df./.available
+        src_key: '"vfs.fs.size[/,free]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.0009765625
+      - dst_key: df./.used
+        src_key: '"vfs.fs.size[/,used]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.0009765625
+      - dst_key: df./data.use_percent
+        src_key: '"vfs.fs.size[/data,pused]"'
+      - dst_key: df./data.available
+        src_key: '"vfs.fs.size[/data,free]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.0009765625
+      - dst_key: df./data.used
+        src_key: '"vfs.fs.size[/data,used]"'
+        value_converters:
+        - scaler:
+            scale_factor: 0.0009765625
+      - dst_key: ip.wwan0.stats64.tx.bytes
+        src_key: '"net.if.out[wwan0,bytes]"'
+      - dst_key: ip.wwan0.stats64.rx.bytes
+        src_key: '"net.if.in[wwan0,bytes]"'
+      - dst_key: ip.eth0.stats64.tx.bytes
+        src_key: '"net.if.out[eth0,bytes]"'
+      - dst_key: ip.eth0.stats64.rx.bytes
+        src_key: '"net.if.in[eth0,bytes]"'
+      - dst_key: ip.wlan0.stats64.tx.bytes
+        src_key: '"net.if.out[wlan0,bytes]"'
+      - dst_key: ip.wlan0.stats64.rx.bytes
+        src_key: '"net.if.in[wlan0,bytes]"'
+      - dst_key: ip.wwan0.stats64.tx.bps
+        src_key: '"net.if.out[wwan0,bytes]"'
+        value_converters:
+        - scaler:
+            scale_factor: 8
+        - change_per_interval:
+            interval_sec: 1
+      - dst_key: ip.wwan0.stats64.rx.bps
+        src_key: '"net.if.in[wwan0,bytes]"'
+        value_converters:
+        - scaler:
+            scale_factor: 8
+        - change_per_interval:
+            interval_sec: 1
+      - dst_key: ip.eth0.stats64.tx.bps
+        src_key: '"net.if.out[eth0,bytes]"'
+        value_converters:
+        - scaler:
+            scale_factor: 8
+        - change_per_interval:
+            interval_sec: 1
+      - dst_key: ip.eth0.stats64.rx.bps
+        src_key: '"net.if.in[eth0,bytes]"'
+        value_converters:
+        - scaler:
+            scale_factor: 8
+        - change_per_interval:
+            interval_sec: 1
+      - dst_key: ip.wlan0.stats64.tx.bps
+        src_key: '"net.if.out[wlan0,bytes]"'
+        value_converters:
+        - scaler:
+            scale_factor: 8
+        - change_per_interval:
+            interval_sec: 1
+      - dst_key: ip.wlan0.stats64.rx.bps
+        src_key: '"net.if.in[wlan0,bytes]"'
+        value_converters:
+        - scaler:
+            scale_factor: 8
+        - change_per_interval:
+            interval_sec: 1
+      - dst_key: ping.round_trip_ms_avg
+        src_key: '"net.rtt["ntp.intdash.jp"]"'
+      - dst_key: lsusb
+        src_key: '"system.hw.devices[usb]"'
+        value_converters:
+        - line_splitter
+        - regex_to_json:
+            capture_pattern: 'Bus ([0-9]+) Device ([0-9]+): ID ([0-9a-fA-F]+:[0-9a-fA-F]+) (.*)'
+            json_keys:
+            - "bus"
+            - "device"
+            - "id"
+            - "description"
+      - dst_key: top[0].processes[0]
+        src_key: '"proc.top[1]"'
+        value_converters:
+        - regex_to_json:
+            capture_pattern: '^\S+\s+\d+\s+([\d.]+)\s+([\d.]+)\s+\d+\s+\d+\s+\S+\s+\S+\s+\S+\s+\S+\s+(.*)$'
+            json_keys:
+            - "percent_cpu"
+            - "percent_mem"
+            - "command"
+      - dst_key: top[0].processes[1]
+        src_key: '"proc.top[2]"'
+        value_converters:
+        - regex_to_json:
+            capture_pattern: '^\S+\s+\d+\s+([\d.]+)\s+([\d.]+)\s+\d+\s+\d+\s+\S+\s+\S+\s+\S+\s+\S+\s+(.*)$'
+            json_keys:
+            - "percent_cpu"
+            - "percent_mem"
+            - "command"
+      - dst_key: top[0].processes[2]
+        src_key: '"proc.top[3]"'
+        value_converters:
+        - regex_to_json:
+            capture_pattern: '^\S+\s+\d+\s+([\d.]+)\s+([\d.]+)\s+\d+\s+\d+\s+\S+\s+\S+\s+\S+\s+\S+\s+(.*)$'
+            json_keys:
+            - "percent_cpu"
+            - "percent_mem"
+            - "command"
+      - dst_key: intdash.agent2.measurements
+        src_key: '"intdash.agent2.measurements[/var/run/core/intdash/agentd.sock]"'
+      - dst_key: intdash.agent2.state.upstream
+        src_key: '"intdash.agent2.upstream.state[/var/run/core/intdash/agentd.sock]"'
+      - dst_key: intdash.agent2.state.downstream
+        src_key: '"intdash.agent2.downstream.state[/var/run/core/intdash/agentd.sock]"'
+      - dst_key: intdash.agent2.state.device_connector_upstream
+        src_key: '"intdash.agent2.device_connector_upstream.state[/var/run/core/intdash/agentd.sock]"'
+      - dst_key: intdash.agent2.state.device_connector_downstream
+        src_key: '"intdash.agent2.device_connector_downstream.state[/var/run/core/intdash/agentd.sock]"'
+      - dst_key: intdash.agent2.state.deferred_upload
+        src_key: '"intdash.agent2.deferred_upload.state[/var/run/core/intdash/agentd.sock]"'
+      - dst_key: firmware.apt_usbtrx
+        src_key: '"ts2.fw.apt_usbtrx[all]"'
+      - dst_key: firmware.terminal_display
+        src_key: '"ts2.fw.terminal_display"'
+      - dst_key: gps
+        src_key: '"ts2.gps.fix"'
+      - dst_key: custom
+        src_key: '"ts2.custom[all]"'
+$(DC_JSON_CONDITIONAL_AGGREGATE_FILTER_CONVERTER_EXTENSION)
+
+  - id: 3
+    element: file-sink
+    from: [ [2] ]
+    conf:
+      path: $(DC_FILE_SINK_CONF_PATH)
+      separator: "\n"

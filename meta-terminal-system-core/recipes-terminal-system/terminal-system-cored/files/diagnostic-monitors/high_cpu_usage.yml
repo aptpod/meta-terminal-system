@@ -1,0 +1,7 @@
+id: high_cpu_usage
+type: metric
+diagnostic_category: alert
+diagnostic_description: "High CPU load, no idle time"
+metric_id: top[0].cpu_idle
+metric_regex: ^(0$|0\.)
+metric_check_interval: 60

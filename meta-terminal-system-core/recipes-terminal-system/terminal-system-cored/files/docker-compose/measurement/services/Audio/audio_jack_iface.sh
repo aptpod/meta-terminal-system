@@ -7,12 +7,12 @@ IFS=$'\n'
 
 conditional_options=
 
-device_paths=$(echo "${alsa_list}" | jq -r ".cards[].by_path")
+device_paths=$(echo "${alsa_list}" | jq -r "[.cards[] | .by_path, .by_id // empty] | unique[]")
 for device in ${device_paths}; do
 
-  audio_elements=$(echo "${alsa_list}" | jq -r ".cards[] | select(.by_path == \"${device}\") | .jack_elements // {} | keys[]")
+  audio_elements=$(echo "${alsa_list}" | jq -r ".cards[] | select(.by_path == \"${device}\" or .by_id == \"${device}\") | .jack_elements // {} | keys[]")
   for audio_element in ${audio_elements}; do
-    conditional_options+=$(echo "${alsa_list}" | jq -c "{preconditions:[\"DC_DEVICE_PATH=${device}\",\"DC_AUDIO_JACK_ELEMENT=${audio_element}\"], validation:(\"^\"+(.cards[] | select(.by_path == \"${device}\") | .jack_elements // {} | .\"${audio_element}\".interface)+\"\$\")}")
+    conditional_options+=$(echo "${alsa_list}" | jq -c "{preconditions:[\"DC_DEVICE_PATH=${device}\",\"DC_AUDIO_JACK_ELEMENT=${audio_element}\"], validation:(\"^\"+(.cards[] | select(.by_path == \"${device}\" or .by_id == \"${device}\") | .jack_elements // {} | .\"${audio_element}\".interface)+\"\$\")}")
   done
 
   conditional_options+="{\"preconditions\":[\"DC_DEVICE_PATH=${device}\",\"DC_AUDIO_JACK_ELEMENT=\"],\"validation\":\".*\"}"

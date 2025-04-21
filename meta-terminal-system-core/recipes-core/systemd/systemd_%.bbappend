@@ -13,11 +13,9 @@ FILES:${PN}:append:mender-systemd = " \
 "
 
 PACKAGECONFIG:remove ="networkd"
+PACKAGECONFIG:remove ="timesyncd"
 
 do_install:append () {
-	# Change NTP Server
-	sed -i"" 's/^#NTP=.*/NTP=ntp.intdash.jp/' ${D}${sysconfdir}/systemd/timesyncd.conf
-
 	# Use systemd-resolved stub mode to docker container can switched DNS Server dynamically.
 	# Note: We have to set workaround to dnsmasq, https://unix.stackexchange.com/a/319501.
 	ln -sf ../run/systemd/resolve/stub-resolv.conf ${D}${sysconfdir}/resolv-conf.systemd

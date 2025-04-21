@@ -22,29 +22,26 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'gps(nmea)'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_DEVICE_PATH
-      default: ''
-      path_glob:
-        - /dev/tty*
-        - /dev/serial/by-id/*
-        - /dev/serial/by-path/*
+      default: '@DEFAULT_GPS_DEVICE_PATH@'
+      options_script: "/etc/core/docker-compose/measurement/services/GPS/device_path.sh"
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path
-          description: TTYデバイスのパス
+          description: TTYデバイスとして認識されたGNSSデバイスのパス
     - key: DC_BAUDRATE
-      default: 9600
+      default: @DEFAULT_GPS_NMEA_BAUDRATE@
       options: [0, 50, 75, 110, 134, 150, 200, 300, 600, 1200, 1800, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400]
       display_strings_i18n:
-        - locale: jpn
-          name: Baudrate
+        - locale: und
+          name: Baud Rate
           description: シリアル通信のボーレート

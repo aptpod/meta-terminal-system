@@ -5,7 +5,12 @@ SRC_URI:append = " \
     file://inventory/mender-inventory-provides-provision \
     file://inventory/mender-inventory-terminal-system-core \
     file://inventory/mender-inventory-device-inventory \
+    file://cpu-weight.conf \
     file://0001-feat-Increase-buffer-size-up-to-8-MB-to-allow-sendin.patch;patchdir=src/github.com/mendersoftware/mender \
+"
+
+FILES:${PN} += " \
+    ${systemd_system_unitdir}/mender-client.service.d \
 "
 
 RDEPENDS:${PN} += " \
@@ -43,5 +48,10 @@ do_install:append() {
     rm -f ${D}/${datadir}/mender/inventory/mender-inventory-hostinfo
     rm -f ${D}/${datadir}/mender/inventory/mender-inventory-network
     rm -f ${D}/${datadir}/mender/inventory/mender-inventory-os
+    rm -f ${D}/${datadir}/mender/inventory/mender-inventory-provides
     rm -f ${D}/${datadir}/mender/inventory/mender-inventory-rootfs-type
+
+    # Adjust CPUWeight for mender-client to prevent high CPU usage during peak times.
+    install -d ${D}${systemd_system_unitdir}/mender-client.service.d
+    install -m 0644 ${WORKDIR}/cpu-weight.conf ${D}${systemd_system_unitdir}/mender-client.service.d/
 }

@@ -10,6 +10,7 @@ FILES:${PN}:append:mender-image = " \
 "
 
 PACKAGECONFIG:append = "dhcpcd ppp modemmanager"
+PACKAGECONFIG:remove = "vala"
 
 do_install:append() {
     install -Dm 0644 ${WORKDIR}/disable-wifi-scan-rand-mac-address.conf ${D}${libdir}/NetworkManager/conf.d/disable-wifi-scan-rand-mac-address.conf

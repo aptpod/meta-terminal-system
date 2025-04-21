@@ -1,0 +1,112 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+network_mode: host
+volumes:
+  - intdash-lock:/var/lock/intdash
+  - /var/run/core/intdash:/var/run/intdash
+  - /var/lib/core/intdash:/var/lib/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/ep_canfd.yml"
+environment:
+    DC_EP_CANFD_SRC_CONF_PATH: ${DC_DEVICE_PATH}
+    DC_EP_CANFD_SRC_CONF_LISTENONLY: 'false'
+    DC_EP_CANFD_SRC_CONF_FD: ${DC_FD}
+    DC_EP_CANFD_SRC_CONF_BITRATE: ${DC_BITRATE}
+    DC_EP_CANFD_SRC_CONF_SAMPLE_POINT: ${DC_SAMPLE_POINT}
+    DC_EP_CANFD_SRC_CONF_DBITRATE: ${DC_DBITRATE}
+    DC_EP_CANFD_SRC_CONF_DSAMPLE_POINT: ${DC_DSAMPLE_POINT}
+    DC_EP_CANFD_SRC_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
+    DC_EP_CANFD_SRC_CONF_ID_MAP: /var/lib/intdash/dc-ep_canfd-id_map
+    DC_EP_CANFD_SRC_CONF_AGENT_DAEMON_URL: http://127.0.0.1:50051
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+    DC_FILE_SRC_CONF_PATH: ${DC_DOWNSTREAM_FIFO_0}
+    DC_EP_CANFD_SINK_CONF_PATH: ${DC_DEVICE_PATH}
+    DC_EP_CANFD_SINK_CONF_LISTENONLY: 'false'
+    DC_EP_CANFD_SINK_CONF_FD: ${DC_FD}
+    DC_EP_CANFD_SINK_CONF_BITRATE: ${DC_BITRATE}
+    DC_EP_CANFD_SINK_CONF_SAMPLE_POINT: ${DC_SAMPLE_POINT}
+    DC_EP_CANFD_SINK_CONF_DBITRATE: ${DC_DBITRATE}
+    DC_EP_CANFD_SINK_CONF_DSAMPLE_POINT: ${DC_DSAMPLE_POINT}
+    DC_EP_CANFD_SINK_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_DOWNSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2からデータを受信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'canfd(upstream)'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DEVICE_PATH
+      default: '/dev/aptUSB0'
+      path_glob:
+        - /dev/apt-usb/by-id/usb-aptpod__Inc._EP1-CF02A_*
+        - /dev/aptUSB*
+      display_strings_i18n:
+        - locale: und
+          name: Device Path
+          description: CAN FD USB Interfaceのデバイスパス
+    - key: DC_FD
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: und
+          name: CAN FD
+          description: CAN FD有効化
+    - key: DC_BITRATE
+      default: '500000'
+      options: ['125000', '250000', '500000', '1000000']
+      display_strings_i18n:
+        - locale: und
+          name: Bitrate
+          description: CAN通信のビットレート
+          unit: bps
+    - key: DC_SAMPLE_POINT
+      default: ''
+      validation: '^(|0.[0-9][0-9][0-9])$'
+      display_strings_i18n:
+        - locale: und
+          name: Sample Point
+          description: CAN通信のサンプルポイント（設定が空文字の場合は自動計算）
+    - key: DC_DBITRATE
+      default: '5000000'
+      validation: '^(|[1-9][0-9]*)$'
+      display_strings_i18n:
+        - locale: und
+          name: Bitrate for Data Phase
+          description: CANデータ通信のビットレート
+          unit: bps
+    - key: DC_DSAMPLE_POINT
+      default: ''
+      validation: '^(|0.[0-9][0-9][0-9])$'
+      display_strings_i18n:
+        - locale: und
+          name: Sample Point for Data Phase
+          description: CANデータ通信のサンプルポイント（設定が空文字の場合は自動計算）
+    - key: DC_TIMESTAMP_MODE
+      default: 'device'
+      options: ['device', 'host']
+      display_strings_i18n:
+        - locale: und
+          name: Timestamp Mode
+          description: データのタイムスタンプに使用するクロック（device:CAN FD USB Interfaceのクロック、host:Terminal Systemコンピューターのクロック）

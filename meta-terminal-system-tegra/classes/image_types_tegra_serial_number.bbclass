@@ -55,6 +55,16 @@ prepare_datafile() {
 
     mkdir -p /mnt/datafile/overlay/etc/core
 
+    if [ x != x\${SERIAL_NUMBER} ]; then
+        hostname="\$(echo "\${SERIAL_NUMBER}" | tr -d '_.')"
+        hostname="\$(echo "\${hostname}" | sed 's/^-*//; s/-*$//')"
+        hostname="\$(echo "\${hostname}" | cut -c1-63)"
+    else
+        hostname="terminal-system"
+    fi
+    echo "writing hostname \"\${hostname}\""
+    echo "\${hostname}" > /mnt/datafile/overlay/etc/hostname
+
     if [ x != x\${API_USER_PASS_ADMIN} -o x != x\${API_USER_PASS_USER} ]; then
         cp -a /mnt/rootfs/etc/core/htpasswd /mnt/datafile/overlay/etc/core
         if [ x != x\${API_USER_PASS_ADMIN} ]; then

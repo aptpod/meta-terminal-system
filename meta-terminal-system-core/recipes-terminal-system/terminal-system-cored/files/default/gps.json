@@ -1,0 +1,1 @@
+{"gps_device":"@DEFAULT_GPS_DEVICE_PATH@","pps_device":"@DEFAULT_PPS_DEVICE_PATH@","speed":@DEFAULT_GPS_BAUDRATE@,"message_type":"@DEFAULT_GPS_MESSAGE_TYPE@","config_command":"","ubx_high_nav_rate_hz":5}

@@ -10,11 +10,7 @@ command:
     - --config
     - "/etc/dc_conf/repeat_process_json.yml"
 environment:
-    DC_REPEAT_PROCESS_SRC_CONF_COMMAND:
-      if [ $(cat /var/run/device-inventory/interval) -ne ${DC_SEND_INTERVAL} ]; then
-          echo ${DC_SEND_INTERVAL} > /var/run/device-inventory/interval;
-      fi;
-      cat /var/run/device-inventory/device-inventory.json;
+    DC_REPEAT_PROCESS_SRC_CONF_COMMAND: cat /var/run/device-inventory/device-inventory.json
     DC_REPEAT_PROCESS_SRC_CONF_INTERVAL_MS: ${DC_SEND_INTERVAL}000
     DC_ISCP_V2_COMPAT_FILTER_CONF_CONVERT_RULE_STRING_NAME: device_inventory
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
@@ -24,20 +20,20 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'device-inventory'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_SEND_INTERVAL
       default: 10
       validation: '^[1-9][0-9]*$'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Send Interval
           description: デバイスインベントリの送信間隔
           unit: sec

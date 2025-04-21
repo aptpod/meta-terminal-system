@@ -1,0 +1,73 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/gstreamer_h264.yml"
+environment:
+    DC_PROCESS_SRC_CONF_COMMAND: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! queue ! video/x-h264,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! fdsink fd=1
+    DC_H264_SPLIT_FILTER_CONF_DELAY_MS: 100
+    DC_H264_SPLIT_FILTER_CONF_FORMAT: ${DC_ISCPV2COMPAT_FORMAT}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'h264'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログを表示するときに使用するタグ
+    - key: DC_DEVICE_PATH
+      default: '/dev/video0'
+      path_glob:
+        - /dev/v4l/by-id/usb-Alpha_Imaging_Tech._Corp._WN_CAM_4K_U3*
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM02A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: und
+          name: Device Path
+          description: デバイスパスを指定することで、使用するカメラを選択
+    - key: DC_WIDTH
+      default: '1280'
+      options: ['1280', '1920']
+      display_strings_i18n:
+        - locale: und
+          name: Width
+          description: 取得する動画の解像度の幅
+          unit: pixel
+    - key: DC_HEIGHT
+      default: '720'
+      options: ['720', '1080']
+      display_strings_i18n:
+        - locale: und
+          name: Height
+          description: 取得する動画の解像度の高さ
+          unit: pixel
+    - key: DC_FPS
+      default: '20'
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/fps_ep1-vm02a.sh"
+      display_strings_i18n:
+        - locale: und
+          name: Frame Rate
+          description: フレームレートを選択
+          unit: fps
+    - key: DC_ISCPV2COMPAT_FORMAT
+      default: 'iscp_v2_compat'
+      options: ['iscp_v2_compat', 'iscp_v2_compat_byte_stream']
+      display_strings_i18n:
+        - locale: und
+          name: iscp-v2-compat Format
+          description: '出力するiscp-v2-compatフォーマットの選択（iscp_v2_compat:H.264 Frame、iscp_v2_compat_byte_stream:H.264 Byte Stream [非推奨]）'

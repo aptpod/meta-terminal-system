@@ -1,0 +1,7 @@
+id: forced_power_off
+type: log
+diagnostic_category: alert
+diagnostic_description: "Forced power off has occurred"
+log_id: edgeplant-l4t-faultlog
+log_regex: .*Forced power off has occured.*
+log_expiration: 10

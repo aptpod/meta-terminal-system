@@ -1,0 +1,54 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+privileged: true
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/joystick_upstream.yml"
+environment:
+    DC_JOYSTICK_SRC_CONF_PATH: ${DC_DEVICE_PATH}
+    DC_JOYSTICK_SRC_CONF_TIMEOUT_MS: 1000
+    DC_JOYSTICK_SRC_CONF_DATAPOINT_NAME: gamepad
+    DC_JOYSTICK_SRC_CONF_TOPIC_NAME: ${DC_GAMEPAD_TOPIC_NAME}
+    DC_JOYSTICK_SRC_CONF_FRAME_ID: ${DC_GAMEPAD_FRAME_ID}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'gamepad'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DEVICE_PATH
+      default: '/dev/input/js0'
+      options_script: "/etc/core/docker-compose/measurement/services/Gamepad/device_path.sh"
+      display_strings_i18n:
+        - locale: und
+          name: Device Path
+          description: Gamepadのデバイスパス
+    - key: DC_GAMEPAD_TOPIC_NAME
+      default: 'gamepad'
+      display_strings_i18n:
+        - locale: und
+          name: Topic Name
+          description: 送信する MessagePack の name フィールドに格納される文字列
+    - key: DC_GAMEPAD_FRAME_ID
+      default: 'frame'
+      display_strings_i18n:
+        - locale: und
+          name: Frame ID
+          description: 送信する MessagePack の frame-id フィールドに格納される文字列

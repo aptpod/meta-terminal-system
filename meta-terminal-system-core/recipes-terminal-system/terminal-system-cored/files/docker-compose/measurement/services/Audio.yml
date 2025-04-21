@@ -16,7 +16,7 @@ environment:
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_ELEMENT: ${DC_AUDIO_JACK_ELEMENT}
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_IFACE: ${DC_AUDIO_JACK_IFACE}
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_FORMAT: ${DC_AUDIO_FORMAT}
-    DC_PCM_SPLIT_FILTER_CONF_AUDIO_RATE: 48000
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_RATE: ${DC_AUDIO_RATE}
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_CHANNELS: 1
     DC_UTILS_ALSA_MIXER_ARGS: ${DC_MIXER_ARGS}
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_SYNC_PERIOD_S: ""
@@ -28,47 +28,59 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'audio'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_DEVICE_PATH
       default: ''
       options_script: "/etc/core/docker-compose/measurement/services/Audio/device_path.sh"
+      cache_key_command: "echo -n Audio-device-path-$(ls -al /dev/snd/by-*/* | md5sum -z)"
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path
-          description: デバイスパスを指定することで、使用する音声入力デバイスを選択
+          description: 音声入力デバイスのデバイスパス
     - key: DC_AUDIO_JACK_ELEMENT
       default: ''
       conditional_options_script: "/etc/core/docker-compose/measurement/services/Audio/audio_jack_element.sh"
+      cache_key_command: "echo -n Audio-audio-jack-element-$(ls -al /dev/snd/by-*/* | md5sum -z)"
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Audio Jack Element
-          description: ジャックの挿抜検知に用いるエレメント名
+          description: オーディオジャックの挿抜検知に使用するALSAエレメント名（挿抜検知をしない場合は設定不要）
     - key: DC_AUDIO_JACK_IFACE
       default: ''
       conditional_validation_script: "/etc/core/docker-compose/measurement/services/Audio/audio_jack_iface.sh"
+      cache_key_command: "echo -n Audio-audio-jack-iface-$(ls -al /dev/snd/by-*/* | md5sum -z)"
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Audio Jack Interface
-          description: ジャックの挿抜検知に用いるインターフェイス名、Audio Elementに有効な値が指定されている場合以外は使用されない
+          description: オーディオジャックの挿抜検知に使用するALSAインターフェイス名（挿抜検知をしない場合は設定不要）
     - key: DC_AUDIO_FORMAT
       default: 'S16LE'
       options: ['S16LE', 'S32LE', 'F32LE']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Format
           description: 音声データの形式
+    - key: DC_AUDIO_RATE
+      default: 48000
+      options: [44100,48000]
+      display_strings_i18n:
+        - locale: und
+          name: Sampling Rate
+          description: 音声データのサンプリング周波数
+          unit: Hz
     - key: DC_MIXER_ARGS
       default: ''
       conditional_validation_script: "/etc/core/docker-compose/measurement/services/Audio/mixer_args.sh"
+      cache_key_command: "echo -n Audio-mixer-args-$(ls -al /dev/snd/by-*/* | md5sum -z)"
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Volume
-          description: 音声データの音量設定。`項目名=0-100%` で指定する。`,`で区切って複数設定も可能（例：`y Mic=100%,y Mic Boost=32%`）。
+          description: 音声データの音量（"項目名=0-100%" の形式で指定。","で区切って複数の設定が可能。例："y Mic=100%,y Mic Boost=32%"）

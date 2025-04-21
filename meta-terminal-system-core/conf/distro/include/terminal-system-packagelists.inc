@@ -37,6 +37,9 @@ TERMINAL_SYSTEM_BASE = "\
     procps \
     python3-pyserial \
     esptool \
+    glibc-utils \
+    gpsd gps-utils \
+    chrony chronyc \
 "
 
 TERMINAL_SYSTEM_CORE = "\

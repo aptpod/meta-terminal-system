@@ -1,0 +1,10 @@
+id: unexpected_power_interruption
+type: script
+diagnostic_category: alert
+diagnostic_description: "Unexpected power interruption has occurred"
+script: |-
+  #!/usr/bin/env bash
+  if journalctl -u edgeplant-l4t-faultlog -b | grep -E '.*Unexpected power interruption has occured.*'; then
+    false
+  fi
+script_check_interval: 525600

@@ -11,15 +11,13 @@ User=root
 Group=root
 RuntimeDirectory=core
 StateDirectory=core
-LogsDirectory=core
 ConfigurationDirectory=core
-Environment=HOME=/home/root CORE_RUN_DIR=/run/core CORE_STATE_DIR=/var/lib/core CORE_LOGS_DIR=/var/log/core CORE_CONF_DIR=/etc/core
+Environment=HOME=/home/root CORE_RUN_DIR=/run/core CORE_STATE_DIR=/var/lib/core CORE_CONF_DIR=/etc/core
 
 # Validate constant variables
 ExecStartPre=/bin/sh -c '/usr/bin/test $(/bin/grep root /etc/passwd | /usr/bin/cut -d ":" -f6) = "/home/root" || { /bin/echo "Unexpected home directory" 1>&2; exit 1; }'
 ExecStartPre=/bin/sh -c '/usr/bin/test ${RUNTIME_DIRECTORY} = ${CORE_RUN_DIR} || { /bin/echo "Unexpected runtime directory" 1>&2; exit 1; }'
 ExecStartPre=/bin/sh -c '/usr/bin/test ${STATE_DIRECTORY} = ${CORE_STATE_DIR} || { /bin/echo "Unexpected state directory" 1>&2; exit 1; }'
-ExecStartPre=/bin/sh -c '/usr/bin/test ${LOGS_DIRECTORY} = ${CORE_LOGS_DIR} || { /bin/echo "Unexpected log directory" 1>&2; exit 1; }'
 ExecStartPre=/bin/sh -c '/usr/bin/test ${CONFIGURATION_DIRECTORY} = ${CORE_CONF_DIR} || { /bin/echo "Unexpected configuration directory" 1>&2; exit 1; }'
 
 # Initialize CORE_STATE_DIR, if needed

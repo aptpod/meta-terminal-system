@@ -1,0 +1,12 @@
+id: rtc_battery_empty
+type: script
+diagnostic_category: alert
+diagnostic_description: "RTC battery may be empty"
+script: |-
+  #!/usr/bin/env bash
+  hwclock_output="$(hwclock --show --utc 2>/dev/null)"
+  if [ $? -ne 0 ] || [ -z "$hwclock_output" ]; then
+    exit 0
+  fi
+  [[ "$hwclock_output" > "2020-01-01" ]]
+script_check_interval: 525600

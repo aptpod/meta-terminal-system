@@ -25,99 +25,99 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'h264(x4)'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_DEVICE_PATH_1
       default: '/dev/video0'
       path_glob:
         - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
         - /dev/video*
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path for Upper Left
-          description: 左上に配置する動画の取得元として、接続されているカメラのデバイスパス
+          description: 左上の動画を取得するカメラのデバイスパス
     - key: DC_DEVICE_PATH_2
       default: '/dev/video1'
       path_glob:
         - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
         - /dev/video*
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path for Upper Right
-          description: 右上に配置する動画の取得元として、接続されているカメラのデバイスパス
+          description: 右上の動画を取得するカメラのデバイスパス
     - key: DC_DEVICE_PATH_3
       default: '/dev/video2'
       path_glob:
         - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
         - /dev/video*
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path for Lower Left
-          description: 左下に配置する動画の取得元として、接続されているカメラのデバイスパス
+          description: 左下の動画を取得するカメラのデバイスパス
     - key: DC_DEVICE_PATH_4
       default: '/dev/video3'
       path_glob:
         - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
         - /dev/video*
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path for Lower Right
-          description: 右下に配置する動画の取得元として、接続されているカメラのデバイスパス
+          description: 右下の動画を取得するカメラのデバイスパス
     - key: DC_FPS
       default: '15'
       options: ['15']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Frame Rate
-          description: フレームレートを選択
+          description: フレームレート
           unit: fps
     - key: DC_VIDEOFLIP_1
       default: 'identity'
       options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Video Flip for Upper Left
-          description: 左上に配置する動画のビデオフリップを選択
+          description: 左上の動画の回転・反転
     - key: DC_VIDEOFLIP_2
       default: 'identity'
       options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Video Flip for Upper Right
-          description: 右上に配置する動画のビデオフリップを選択
+          description: 右上の動画の回転・反転
     - key: DC_VIDEOFLIP_3
       default: 'identity'
       options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Video Flip for Lower Left
-          description: 左下に配置する動画のビデオフリップを選択
+          description: 左下の動画の回転・反転
     - key: DC_VIDEOFLIP_4
       default: 'identity'
       options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Video Flip for Lower Right
-          description: 右下に配置する動画のビデオフリップを選択
+          description: 右下の動画の回転・反転
     - key: DC_BITRATE
       default: '2000000'
       options: ['500000', '1000000', '2000000', '3000000', '5000000', '8000000']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Bitrate
-          description: ビットレートを選択
+          description: ビットレート
           unit: bps
     - key: DC_ISCPV2COMPAT_FORMAT
       default: 'iscp_v2_compat'
       options: ['iscp_v2_compat', 'iscp_v2_compat_byte_stream']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: iscp-v2-compat Format
-          description: '出力するiscp-v2-compatフォーマットの選択（iscp_v2_compat:H.264 Frame、iscp_v2_compat_byte_stream:H.264 Byte Stream [非推奨]）'
+          description: '送信時のデータ型（特別な理由がなければiscp_v2_compatを使用してください）'

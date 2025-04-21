@@ -35,33 +35,33 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'audio(onboard)'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_AUDIO_FORMAT
       default: 'S16LE'
       options: ['S16LE', 'S32LE', 'F32LE']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Format
           description: 音声データの形式
     - key: DC_AUDIO_VOLUME
       default: '20'
       validation: '^([0-9]|1[0-9]|20)$'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Volume
-          description: 音声データの音量(0-20で指定、1上げるごとに1.00 dB上昇、0のときは 0.00 dB設定)
+          description: 音声データの音量（0-20で指定。1上げるごとに1.00 dB上昇、0のときは 0.00 dB）
     - key: DC_AUDIO_BOOST
       default: '1'
       validation: '^[0-3]$'
       display_strings_i18n:
-        - locale: jpn
-          name: Volume
-          description: 音声データのブースト (0:-20.00 dB(ミュート)、1:0.00 dB(ブーストなし)、2:20.00 dB、3:30.00 dB)
+        - locale: und
+          name: Boost
+          description: 音声データのブースト（0-3で指定。0:-20.00 dBでミュート、1:0.00 dBでブーストなし、2:20.00 dB、3:30.00 dB）

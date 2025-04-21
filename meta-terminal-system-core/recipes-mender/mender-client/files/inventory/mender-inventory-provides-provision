@@ -5,10 +5,28 @@
 set -e
 
 MENDER_ARTIFACT_NAME="@MENDER_ARTIFACT_NAME@"
-PROVIDES="$(mender show-provides 2>/dev/null | grep rootfs-image.version || true)"
+INVENTORY_PROVIDES_REPORTED_FLAG="/tmp/mender-inventory-provides-reported-flag"
 
-if [ -z "${PROVIDES}" ]; then
-    echo "rootfs-image.version=${MENDER_ARTIFACT_NAME}"
+# Due to the high CPU usage of the 'mender show-provides' command,
+# the provides inventory is reported only on the first startup or when the reported flag file is removed.
+# When an artifact is installed, the State Script `SetInventoryProvidesReportFlag` will remove the reported flag file.
+if [ -f "${INVENTORY_PROVIDES_REPORTED_FLAG}" ]; then
+    cat "$INVENTORY_PROVIDES_REPORTED_FLAG"
+    exit 0
 fi
+
+touch "${INVENTORY_PROVIDES_REPORTED_FLAG}"
+
+provides="$(mender show-provides 2>/dev/null)"
+echo "$provides" >>"${INVENTORY_PROVIDES_REPORTED_FLAG}"
+
+# Since rootfs-image.version does not exist immediately after provisioning,
+# report the image version using the provided artifact name.
+provides_rootfs="$(echo "${provides}" | grep rootfs-image.version || true)"
+if [ -z "${provides_rootfs}" ]; then
+    echo "rootfs-image.version=${MENDER_ARTIFACT_NAME}" >>"${INVENTORY_PROVIDES_REPORTED_FLAG}"
+fi
+
+cat "$INVENTORY_PROVIDES_REPORTED_FLAG"
 
 exit 0
