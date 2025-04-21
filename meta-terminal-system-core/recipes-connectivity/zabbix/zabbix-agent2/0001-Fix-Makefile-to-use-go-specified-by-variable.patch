@@ -1,0 +1,28 @@
+From c5553908dfe0664a7b0f7142872c48afe541bf6e Mon Sep 17 00:00:00 2001
+From: ochiai <ochiai@aptpod.co.jp>
+Date: Fri, 2 Aug 2024 15:48:14 +0900
+Subject: [PATCH] Fix Makefile to use go specified by variable
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ src/go/Makefile.am | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/go/Makefile.am b/src/go/Makefile.am
+index 3e24aa0..126fb7f 100644
+--- a/src/go/Makefile.am
++++ b/src/go/Makefile.am
+@@ -4,8 +4,8 @@ EXTRA_DIST = .
+ 
+ BUILD_TIME=`date +%H:%M:%S`
+ BUILD_DATE=`date +"%b %_d %Y"`
+-GOOS=`go env GOOS`
+-GOARCH=`go env GOARCH`
++GOOS=`$(GO) env GOOS`
++GOARCH=`$(GO) env GOARCH`
+ PKG=golang.zabbix.com/agent2/pkg/version
+ NEW_FROM_REV=""
+ 
+-- 
+2.37.1 (Apple Git-137.1)
+

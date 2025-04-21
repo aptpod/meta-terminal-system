@@ -1,0 +1,40 @@
+#!/bin/sh
+
+# FIXME: WORKARUOND
+# Ensure that device_type is always sent as inventory because
+# in Mender Client 4.0.4, device_type may not be transmitted correctly.
+# https://hub.mender.io/t/device-type-not-visible-in-hosted-mender-ui/7271/4
+
+MENDER_CONF="/etc/mender/mender.conf"
+MENDER_CONF_FALLBACK="/var/lib/mender/mender.conf"
+DEFAULT_DEVICE_TYPE_FILE="/var/lib/mender/device_type"
+
+get_device_type_file() {
+    # Try to get DeviceTypeFile from the main config file
+    device_type_file="$(jq -r '.DeviceTypeFile // empty' "$MENDER_CONF" 2>/dev/null)"
+    if [ -f "$device_type_file" ]; then
+        echo "$device_type_file"
+        return
+    fi
+
+    # Try to get DeviceTypeFile from the fallback config file
+    device_type_file="$(jq -r '.DeviceTypeFile // empty' "$MENDER_CONF_FALLBACK" 2>/dev/null)"
+    if [ -f "$device_type_file" ]; then
+        echo "$device_type_file"
+        return
+    fi
+
+    # Fallback to the default device type file
+    if [ -f "$DEFAULT_DEVICE_TYPE_FILE" ]; then
+        echo "$DEFAULT_DEVICE_TYPE_FILE"
+    fi
+}
+
+print_device_type() {
+    device_type_file="$(get_device_type_file)"
+    if [ -n "$device_type_file" ]; then
+        cat "$device_type_file"
+    fi
+}
+
+print_device_type

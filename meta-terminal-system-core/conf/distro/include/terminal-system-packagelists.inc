@@ -37,6 +37,9 @@ TERMINAL_SYSTEM_BASE = "\
     procps \
     python3-pyserial \
     esptool \
+    glibc-utils \
+    gpsd gps-utils \
+    chrony chronyc \
 "
 
 TERMINAL_SYSTEM_CORE = "\
@@ -52,6 +55,7 @@ TERMINAL_SYSTEM_NETWORK = "\
     networkmanager \
     hostapd \
     bind-utils \
+    kernel-modules-rtl8821au \
 "
 
 TERMINAL_SYSTEM_CONNECTOR = "\
@@ -76,6 +80,5 @@ TERMINAL_SYSTEM_MENDER = "\
     mender-configure \
     mender-update-module-custom \
     mender-terminal-system-state-scripts \
-    mender-shutdown-update \
     mender-standalone-update \
 "

@@ -29,22 +29,22 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
-          name: FIFO Path
+        - locale: und
+          name: FIFO Path for Upstream
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_DOWNSTREAM_FIFO_0
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
-          name: FIFO Path
-          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+        - locale: und
+          name: FIFO Path for Downstream
+          description: intdash Edge Agent 2からデータを受信するためのFIFOのパス
     - key: DC_TAG
       default: 'can'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_DEVICE_PATH
       default: '/dev/aptUSB0'
       path_glob:
@@ -53,21 +53,21 @@ substitution_variables:
         - /dev/apt-usb/by-id/usb-STMicroelectronics_CAN-USB_transceiver*
         - /dev/aptUSB*
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path
           description: CAN-USB Interfaceのデバイスパス
     - key: DC_TIMESTAMP_MODE
       default: 'device'
       options: ['device', 'host']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Timestamp Mode
-          description: 受信したデータに対して、タイムスタンプをどのように付与するか
+          description: データのタイムスタンプに使用するクロック（device:CAN-USB Interfaceのクロック、host:Terminal Systemコンピューターのクロック）
     - key: DC_BAUDRATE
       default: '500'
       options: ['125', '250', '500', '1000']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Baud Rate
           description: CAN通信のボーレート
           unit: Kbps

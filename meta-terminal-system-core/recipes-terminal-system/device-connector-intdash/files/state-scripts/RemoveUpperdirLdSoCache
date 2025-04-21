@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# To run dc-runner from device-connector version 3, loading libdc_core.so is required.
+# libdc_core.so is stored in the path specified by /etc/ld.so.conf/libdc-core.conf,
+# and when updating from an older OS image, updating /etc/ld.so.cache is necessary.
+# However, /etc is mounted with OverlayFS, and the old /etc/ld.so.cache may persist,
+# preventing the library from being loaded correctly.
+
+# In standalone mode OS updates, ldconfig cannot be executed since State Scripts are
+# not run after reboot. Therefore, by manually removing the /etc/ld.so.cache that remains
+# in the upperdir, the system can reference the new /etc/ld.so.cache from the updated rootfs,
+# allowing libdc_core.so to be loaded successfully.
+
+if [ -e /data/overlay/etc/ld.so.cache ]; then
+    rm -f /data/overlay/etc/ld.so.cache
+    echo "Old ld.so.cache removed from upperdir."
+fi

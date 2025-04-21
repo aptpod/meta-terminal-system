@@ -1,7 +1,7 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI = "file://UpdateStateFile \
-           file://ClearControlMap \
+           file://SetInventoryProvidesReportFlag \
           "
 
 LICENSE = "Apache-2.0"
@@ -22,12 +22,6 @@ copy_update_state_file() {
     cp UpdateStateFile ${MENDER_STATE_SCRIPTS_DIR}/${state}_Leave_99_UpdateStateFile
 }
 
-copy_clear_control_map() {
-    # The order is specified between 01 and 98.
-    local state=$1
-    cp ClearControlMap ${MENDER_STATE_SCRIPTS_DIR}/${state}_10_ClearControlMap
-}
-
 do_compile() {
     # Add a script to get the state
     # mender-client does not have a way to get the state by default
@@ -42,7 +36,10 @@ do_compile() {
     copy_update_state_file "ArtifactRollbackReboot"
     copy_update_state_file "ArtifactFailure"
 
-    # Clear the control map for shutdown updates once the artifact update process is complete.
-    copy_clear_control_map "ArtifactCommit_Leave"
-    copy_clear_control_map "ArtifactFailure_Leave"
+    # Create a flag to indicate that the provides inventory needs to be reported.
+    # The `mender-update show-provides` command is CPU intensive, so to avoid excessive CPU usage,
+    # we generate a flag to trigger the inventory report only when an artifact is installed.
+    # This flag is set during the `Download` state of the State Script, ensuring it runs
+    # for any artifact installation, including stand-alone installations.
+    cp SetInventoryProvidesReportFlag ${MENDER_STATE_SCRIPTS_DIR}/Download_Leave_90_SetInventoryProvidesReportFlag
 }

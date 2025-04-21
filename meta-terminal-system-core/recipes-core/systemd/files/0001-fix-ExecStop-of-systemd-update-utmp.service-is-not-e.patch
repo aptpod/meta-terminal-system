@@ -4,6 +4,7 @@ Date: Sun, 29 Oct 2023 21:46:07 +0900
 Subject: [PATCH] fix: ExecStop of systemd-update-utmp.service is not executed
  https://bugzilla.redhat.com/show_bug.cgi?id=1619994
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
  units/systemd-update-utmp-runlevel.service.in | 1 -
  1 file changed, 1 deletion(-)

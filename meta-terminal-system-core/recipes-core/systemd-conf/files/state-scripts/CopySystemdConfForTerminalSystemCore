@@ -1,0 +1,76 @@
+#!/bin/sh
+set -e
+
+#
+# Copy proxy configuration to prevent removal during updates
+#
+
+# Definitions
+
+SOURCE_PATH="/lib/systemd/system.conf.d/99-terminal-system-core.conf"
+MENDER_CONF="/data/mender/mender.conf"
+
+TEMP_MOUNT_DIR=""
+
+cleanup() {
+    if [ -n "$TEMP_MOUNT_DIR" ] && mountpoint -q "$TEMP_MOUNT_DIR"; then
+        umount "$TEMP_MOUNT_DIR"
+    fi
+    if [ -n "$TEMP_MOUNT_DIR" ] && [ -d "$TEMP_MOUNT_DIR" ]; then
+        rmdir "$TEMP_MOUNT_DIR"
+    fi
+}
+
+# Exit if file does not exist
+
+if [ ! -f "$SOURCE_PATH" ]; then
+  exit 0
+fi
+
+# Get rootfs partition information
+
+ROOTFS_PART_A=$(jq -r '.RootfsPartA' "$MENDER_CONF")
+ROOTFS_PART_B=$(jq -r '.RootfsPartB' "$MENDER_CONF")
+if [ -z "$ROOTFS_PART_A" ] || [ -z "$ROOTFS_PART_B" ]; then
+  echo "Failed to copy proxy configuration: partition information is blank in '$MENDER_CONF'." >&2
+  exit 1
+fi
+
+# Get current rootfs partition
+
+CURRENT_PART=$(mount | grep "on / " | awk '{print $1}')
+if [ -z "$CURRENT_PART" ]; then
+  echo "Failed to copy proxy configuration: no root path found by mount command." >&2
+  exit 1
+fi
+
+# Get install rootfs partition
+
+if [ "$CURRENT_PART" = "$ROOTFS_PART_A" ]; then
+  INSTALL_PART="$ROOTFS_PART_B"
+elif [ "$CURRENT_PART" = "$ROOTFS_PART_B" ]; then
+  INSTALL_PART="$ROOTFS_PART_A"
+else
+  echo "Failed to copy proxy configuration: root path '$CURRENT_PART' does not match '$ROOTFS_PART_A' or '$ROOTFS_PART_B'." >&2
+  exit 1
+fi
+
+# Reserve trap
+
+trap cleanup INT TERM EXIT
+
+# Find install rootfs mount point or mount it
+
+INSTALL_MOUNT_POINT=$(mount | grep "$INSTALL_PART" | awk '{print $3}')
+if [ -z "$INSTALL_MOUNT_POINT" ]; then
+  TEMP_MOUNT_DIR_CANDIDATE=$(mktemp -d /mnt-XXXXXX)
+  mount "$INSTALL_PART" "$TEMP_MOUNT_DIR_CANDIDATE"
+  TEMP_MOUNT_DIR="$TEMP_MOUNT_DIR_CANDIDATE"
+  INSTALL_MOUNT_POINT="$TEMP_MOUNT_DIR_CANDIDATE"
+fi
+
+# Copy the source file to the install mount point
+
+if [ -f "$SOURCE_PATH" ]; then
+  install -m 755 "$SOURCE_PATH" "$INSTALL_MOUNT_POINT$SOURCE_PATH"
+fi

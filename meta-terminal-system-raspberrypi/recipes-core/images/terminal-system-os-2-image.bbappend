@@ -1,6 +1,3 @@
-# Provisioning settings
-TERMINAL_IMAGE_EXTRA_INSTALL:append = " rpi-ts2-config"
-
 # Debugging tools
 TERMINAL_IMAGE_EXTRA_INSTALL:append = " raspi-gpio i2c-tools"
 

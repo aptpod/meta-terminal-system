@@ -10,11 +10,16 @@ services:
       retries: 1
       start_period: 10s
     network_mode: host
+    environment:
+      - HTTP_PROXY=${HTTP_PROXY}
+      - HTTPS_PROXY=${HTTPS_PROXY}
+      - NO_PROXY=${NO_PROXY}
     command: intdash-agentctl run --address localhost:50051
     stop_grace_period: 30s
     volumes:
       - /var/run/core/intdash:/var/run/intdash
       - /var/lib/core/intdash:/var/lib/intdash
+      - /var/lib/core/client-credentials:/var/lib/core/client-credentials
 
 volumes:
   intdash-lock:

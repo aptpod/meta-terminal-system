@@ -6,12 +6,15 @@ set -u
 
 ADDR="${TEST_COREAPI_ADDR:-localhost}"
 PORT=${TEST_COREAPI_PORT:-8081}
+JSON_LIMIT=${TEST_MENDER_JSON_LIMIT:-8388608}
 BASE_URL="http://${ADDR}:${PORT}/api"
+NETWORK_ROUTE_IP="${NETWORK_ROUTE_IP:-8.8.8.8}"
 
 declare -A API_LIST=(
     ["network_devices"]="/network_devices"
     ["gsm_band_presets"]="/gsm_band_presets"
     ["terminal_system"]="/terminal_system"
+    ["client_credentials"]="/client_credentials"
     ["agent.connection.state"]="/agent/connection/state"
     ["agent.upstreams.state"]="/agent/upstreams/-/state"
     ["agent.downstreams.state"]="/agent/downstreams/-/state"
@@ -19,28 +22,63 @@ declare -A API_LIST=(
     ["agent.measurements"]="/agent/measurements"
     ["agent.device_connectors_upstream.state"]="/agent/device_connectors_upstream/-/state"
     ["agent.device_connectors_downstream.state"]="/agent/device_connectors_downstream/-/state"
+    ["time_sync.sources"]="/time_sync/sources"
+    ["diagnostics"]="/diagnostics?filters=%7B%22category%22%3A%5B%22alert%22%5D%2C%22resolved%22%3A%5Bfalse%5D%7D"
     ["device_connector_services"]="/device_connector_services"
     ["docker.images"]="/docker/images"
     ["docker.containers"]="/docker/containers"
+    ["network.route"]="/network/route/${NETWORK_ROUTE_IP}"
 )
 
 exit_code=0
+
+function set_network_route() {
+    connection="$(curl -fsL ${BASE_URL}/agent/connection || echo '')"
+    server_url="$(echo "$connection" | jq -r '.server_url')"
+    hostname="$(echo "$server_url" | sed 's|.*//||' | sed 's|/.*||')"
+    ip="$(timeout 1 getent hosts "$hostname" | awk '{ print $1 }' | tail -n1 || echo '')"
+    if [ -n "$ip" ]; then
+        NETWORK_ROUTE_IP="$ip"
+    fi
+    API_LIST["network.route"]="/network/route/${NETWORK_ROUTE_IP}"
+}
 
 function get_content_from_list() {
     local -n api_list=$1
 
     for key in "${!api_list[@]}"; do
         endpoint="${api_list[${key}]}"
-        content="$(curl -fsL "${BASE_URL}${endpoint}" | jq -c)"
+        if [[ "$endpoint" == *\?* ]]; then
+            next_page="${BASE_URL}${endpoint}&page=1&page_size=5"
+        else
+            next_page="${BASE_URL}${endpoint}?page=1&page_size=5"
+        fi
 
-        if [ -n "${content}" ]; then
-            echo "${key}=${content}"
+        headers_path=$(mktemp)
+
+        local -a contents=()
+        local len=0
+        while [ -n "${next_page}" ]; do
+            content="$(curl -fsL -D "${headers_path}" "${next_page}")"
+            len=$((len + ${#content}))
+            if [ "${len}" -gt "${JSON_LIMIT}" ]; then
+                break
+            fi
+            contents+=("${content}")
+            next_page=$(grep -i 'Link' "${headers_path}" | sed -n 's/.*<\(.*\)>; rel="next".*/\1/p')
+        done
+
+        rm -f "${headers_path}"
+
+        if [ ${#contents[@]} -gt 0 ]; then
+            echo "${key}=$(echo "${contents[@]}" | jq -cs 'add // empty')"
         else
             exit_code=1
         fi
     done
 }
 
+set_network_route
 get_content_from_list API_LIST
 
 exit ${exit_code}

@@ -1,3 +1,5 @@
+Upstream-Status: Inappropriate [configuration specific]
+---
 diff --git a/drivers/media/usb/uvc/uvc_video.c b/drivers/media/usb/uvc/uvc_video.c
 index 39e5855a4c02..b1596ccf2ba5 100644
 --- a/drivers/media/usb/uvc/uvc_video.c

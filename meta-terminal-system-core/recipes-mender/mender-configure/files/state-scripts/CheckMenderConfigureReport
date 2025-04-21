@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# To avoid Mender Configure device settings not being reported in the initial inventory
+# after the mender-updated starts, re-report during Sync_Leave if a flag file from a
+# failed authentication exists.
+
+DBUS_AUTH_FAILED_FLAG_FILE=${TEST_DBUS_AUTH_FAILED_FLAG_FILE:-/tmp/mender-configure-dbus-auth-failed-flag}
+
+if [ -e "$DBUS_AUTH_FAILED_FLAG_FILE" ]; then
+    /usr/share/mender/inventory/mender-inventory-mender-configure
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+    echo "Mender Configure device settings reported successfully."
+    rm -f "$DBUS_AUTH_FAILED_FLAG_FILE"
+fi
+
+exit 0

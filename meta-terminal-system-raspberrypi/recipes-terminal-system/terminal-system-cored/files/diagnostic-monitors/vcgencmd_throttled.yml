@@ -1,0 +1,16 @@
+id: vcgencmd_throttled
+type: script
+diagnostic_category: alert
+diagnostic_description: "%{stdout}"
+script: |-
+  #!/usr/bin/env bash
+  throttling_status=$(vcgencmd get_throttled 2>/dev/null | sed -n 's/^throttled=0x\([0-9a-fA-F]*\)$/\1/p')
+  if [ -z "$throttling_status" ]; then
+    echo -n "Failed to get throttling status"
+    exit 2
+  fi
+  if [ "$throttling_status" != "0" ]; then
+    echo -n "Under-voltage, overheating, or CPU throttling has occurred: get_throttled bits 0x$throttling_status"
+    exit 1
+  fi
+script_check_interval: 10

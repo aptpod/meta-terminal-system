@@ -1,0 +1,8 @@
+id: unexpected_power_interruption
+type: script
+diagnostic_category: alert
+diagnostic_description: "Unexpected power interruption has occurred"
+script: |-
+  #!/usr/bin/env bash
+  [ "$(last reboot | grep 'still running' | wc -l)" -eq 1 ]
+script_check_interval: 525600

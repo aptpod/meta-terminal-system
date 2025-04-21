@@ -1,0 +1,52 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/iio_upstream.yml"
+environment:
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    # Workaround: To prevent using the previous scale, set the scale value in advance and wait 1 second.
+    DC_BEFORE_SCRIPT: '[ ''echo "0.001221729" > $(grep -l "lsm6dso_gyro" /sys/bus/iio/devices/iio:device*/name | xargs -n1 dirname | head -n1)/in_anglvel_scale'', ''sleep 1'' ]'
+    # Use host mode due to the poor timestamp accuracy of the LSM6DSO
+    DC_IIO_SRC_CONF_TIMESTAMP_MODE: host
+    DC_IIO_SRC_CONF_CONTEXT: '"local:"'
+    DC_IIO_SRC_CONF_DEVICE_NAME: lsm6dso_gyro
+    DC_IIO_SRC_CONF_TRIGGER_NAME: ''
+    # full-scale 2000 dps: 0.001221729
+    DC_IIO_SRC_CONF_SCAN_ELEMENTS: '[{name: anglvel_x, attr: {scale: &scale 0.001221729}}, {name: anglvel_y, attr: {scale: *scale}}, {name: anglvel_z, attr: {scale: *scale}}]'
+    DC_IIO_SRC_CONF_APPLY_SCALE: true
+    DC_IIO_SRC_CONF_ADDITIONAL_SCALE_FACTOR: 10000.0
+    DC_IIO_SRC_CONF_SAMPLING_FREQUENCY: '"${DC_SAMPLING_FREQUENCY}"'
+    DC_IIO_SRC_CONF_SEND_FREQUENCY: 5
+    DC_IIO_SRC_CONF_TIMEOUT_MS: 2000
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'gyro(onboard)'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_SAMPLING_FREQUENCY
+      default: '416.000'
+      options: ['12.500', '26.000', '52.000', '104.000', '208.000', '416.000']
+      display_strings_i18n:
+        - locale: und
+          name: Sampling Frequency
+          description: サンプリング周波数
+          unit: Hz

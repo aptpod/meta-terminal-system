@@ -3,9 +3,8 @@ inherit core-image
 
 IMAGE_BASENAME = "${DISTRO}-image"
 IMAGE_LINGUAS = " "
-IMAGE_FEATURES += " package-management"
-EXTRA_IMAGE_FEATURES += "ssh-server-openssh"
-TERMINAL_IMAGE_EXTRA_INSTALL = ""
+IMAGE_FEATURES += " package-management ssh-server-openssh"
+TERMINAL_IMAGE_EXTRA_INSTALL ?= ""
 
 require conf/distro/include/terminal-system-packagelists.inc
 IMAGE_INSTALL:append = " \

@@ -1,0 +1,3 @@
+# NOTE: Unmounting is not supported
+KERNEL=="mmcblk2p1", ENV{DEVPATH}=="/devices/platform/soc/fe202000.mmc/mmc_host/mmc2/mmc2:59b4/block/mmcblk2/mmcblk2p1", SUBSYSTEM=="block", ACTION=="add", \
+TAG+="systemd", ENV{SYSTEMD_WANTS}+="sd-mount@%k.service"

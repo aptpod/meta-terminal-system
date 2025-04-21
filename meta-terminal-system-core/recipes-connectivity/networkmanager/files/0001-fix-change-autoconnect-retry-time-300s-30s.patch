@@ -1,25 +1,26 @@
-From bb21a94be03618903c1defaa1b9e516b36fcce20 Mon Sep 17 00:00:00 2001
-From: ochiai <ochiai@aptpod.co.jp>
-Date: Sat, 4 Dec 2021 14:45:37 +0900
+From 04fabe8cf59df44b5b9efd6c1d40e4b50e7d6302 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Tue, 9 Apr 2024 15:18:39 +0900
 Subject: [PATCH] fix: change autoconnect retry time 300s -> 30s
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
- src/settings/nm-settings-connection.c | 2 +-
+ src/core/nm-manager.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/src/core/settings/nm-settings-connection.c b/src/core/settings/nm-settings-connection.c
-index ccbab80..eabef0f 100644
---- a/src/core/settings/nm-settings-connection.c
-+++ b/src/core/settings/nm-settings-connection.c
-@@ -29,7 +29,7 @@
+diff --git a/src/core/nm-manager.c b/src/core/nm-manager.c
+index b2a827e38b..9aae62f2f4 100644
+--- a/src/core/nm-manager.c
++++ b/src/core/nm-manager.c
+@@ -68,7 +68,7 @@ typedef struct {
+     bool hw_enabled : 1;
+ } RfkillRadioState;
  
- #define AUTOCONNECT_RETRIES_UNSET       -2
- #define AUTOCONNECT_RETRIES_FOREVER     -1
--#define AUTOCONNECT_RESET_RETRIES_TIMER 300
-+#define AUTOCONNECT_RESET_RETRIES_TIMER 30
+-#define AUTOCONNECT_RESET_RETRIES_TIMER_SEC 300
++#define AUTOCONNECT_RESET_RETRIES_TIMER_SEC 30
  
- #define SEEN_BSSIDS_MAX 30
- 
+ typedef struct {
+     NMDevice             *device;
 -- 
-2.24.3 (Apple Git-128)
+2.25.1
 

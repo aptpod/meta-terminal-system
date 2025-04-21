@@ -7,10 +7,10 @@ IFS=$'\n'
 
 conditional_options=
 
-device_paths=$(echo "${alsa_list}" | jq -r ".cards[].by_path")
+device_paths=$(echo "${alsa_list}" | jq -r "[.cards[] | .by_path, .by_id // empty] | unique[]")
 for device in ${device_paths}; do
 
-  mixers=$(echo "${alsa_list}" | jq -r ".cards[] | select(.by_path == \"${device}\") | .mixer_controls // {} | keys[]")
+  mixers=$(echo "${alsa_list}" | jq -r ".cards[] | select(.by_path == \"${device}\" or .by_id == \"${device}\") | .mixer_controls // {} | keys[]")
   if [ -z "${mixers}" ]; then
     validation='^$'
   else

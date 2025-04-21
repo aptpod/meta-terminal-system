@@ -1,0 +1,37 @@
+From d57ca03f034564cc50bc5a727a1ae4a4dccef053 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Sat, 16 Nov 2024 23:46:40 +0900
+Subject: [PATCH] feat: Allow forced commit without reboot during standalone
+ updates In standalone updates, state transitions involving reboot are not
+ supported. Therefore, when updating via the Terminal System API, commit
+ operations are performed unconditionally.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ support/modules/rootfs-image | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/support/modules/rootfs-image b/support/modules/rootfs-image
+index d7dc73f7..409c7369 100755
+--- a/support/modules/rootfs-image
++++ b/support/modules/rootfs-image
+@@ -264,7 +264,15 @@ EOF
+             echo "Upgrade failed and was reverted: refusing to commit!" 1>&2
+             exit 1
+         fi
+-        check_device_matches_root "$active"
++
++        # In Terminal System 2, committing artifacts without a reboot is exceptionally allowed
++        # only for standalone updates performed via the Terminal System API.
++        STANDALONE_UPDATE_FORCE_COMMIT_FLAG="/tmp/.mender-standalone-update-force-commit-flag"
++        if [ ! -e "$STANDALONE_UPDATE_FORCE_COMMIT_FLAG" ]; then
++            check_device_matches_root "$active"
++        else
++            rm -f "$STANDALONE_UPDATE_FORCE_COMMIT_FLAG"
++        fi
+ 
+         ${SETENV} upgrade_available 0
+         ;;
+-- 
+2.34.1
+

@@ -6,6 +6,7 @@ MENDER_REBOOT_EXIT_CODE=4
 MENDER_COMMIT_NO_UPDATE_EXIT_CODE=2
 EXIT_CODE=0
 IS_MENDER_CLIENT_ACTIVE=
+STANDALONE_UPDATE_FORCE_COMMIT_FLAG="/tmp/.mender-standalone-update-force-commit-flag"
 
 usage() {
     cat <<EOF
@@ -22,10 +23,10 @@ EOF
 }
 
 stop_mender_client() {
-    case "$(systemctl is-active mender-client.service 2>/dev/null || true)" in
+    case "$(systemctl is-active mender-updated.service 2>/dev/null || true)" in
     active)
-        echo "stop mender-client.service"
-        systemctl stop mender-client.service
+        echo "stop mender-updated.service"
+        systemctl stop mender-updated.service
         IS_MENDER_CLIENT_ACTIVE=true
         ;;
     *)
@@ -36,8 +37,8 @@ stop_mender_client() {
 
 restart_mender_client() {
     if "${IS_MENDER_CLIENT_ACTIVE}"; then
-        echo "restart mender-client.service"
-        systemctl start mender-client.service
+        echo "restart mender-updated.service"
+        systemctl start mender-updated.service
     fi
 }
 
@@ -61,7 +62,7 @@ install() {
 
     echo "install $FILE"
     ret=0
-    mender install --reboot-exit-code "$FILE" || ret=$?
+    mender-update install --reboot-exit-code "$FILE" || ret=$?
 
     # If reboot is required, set exit code 4
     if [ $ret -eq $MENDER_REBOOT_EXIT_CODE ]; then
@@ -73,7 +74,9 @@ install() {
 
     echo "commit $FILE"
     ret=0
-    mender commit > $tmplog 2>&1 || ret=$?
+    touch "$STANDALONE_UPDATE_FORCE_COMMIT_FLAG" && sync
+    mender-update commit > $tmplog 2>&1 || ret=$?
+    rm -f "$STANDALONE_UPDATE_FORCE_COMMIT_FLAG"
 
     # Suppress error logging if no updates
     if [ $ret -ne $MENDER_COMMIT_NO_UPDATE_EXIT_CODE ];then

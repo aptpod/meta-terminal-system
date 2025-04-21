@@ -1,0 +1,14 @@
+[Unit]
+Description=SD Initialize Service
+RequiresMountsFor=/data
+After=media-sd.mount
+Wants=media-sd.mount
+Before=docker.service terminal-system-cored.service
+ConditionPathExists=!/data/.sd_initialized
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/sd-initialize.sh
+
+[Install]
+WantedBy=multi-user.target

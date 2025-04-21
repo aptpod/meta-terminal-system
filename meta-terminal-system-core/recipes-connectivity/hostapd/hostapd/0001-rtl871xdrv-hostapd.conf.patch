@@ -2,6 +2,7 @@ From 744c7e3beca5f50808c496ab1ee6ff64f66bb17a Mon Sep 17 00:00:00 2001
 From: nomoto <nomoto@aptpod.co.jp>
 Date: Mon, 19 Dec 2022 17:26:02 +0900
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
  hostapd/hostapd.conf | 12 ++++++------
  1 file changed, 6 insertions(+), 6 deletions(-)

@@ -1,0 +1,7 @@
+id: agent_quitting
+type: log
+diagnostic_category: alert
+diagnostic_description: "Agent is quitting, please reduce transfer data."
+log_id: measurement-intdash-edge-agent2-1
+log_regex: .*send error, quitting.*
+log_expiration: 10

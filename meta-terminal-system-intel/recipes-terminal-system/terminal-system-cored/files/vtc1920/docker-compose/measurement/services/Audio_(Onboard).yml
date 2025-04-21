@@ -1,0 +1,62 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+privileged: true
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/gstreamer_pcm.yml"
+environment:
+    DC_PCM_SPLIT_FILTER_CONF_PATH: /dev/snd/by-path/pci-0000:00:1f.3
+    DC_PCM_SPLIT_FILTER_CONF_DELAY_MS: 0
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_ELEMENT: Mic Jack
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_IFACE: card
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_FORMAT: ${DC_AUDIO_FORMAT}
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_RATE: 48000
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_CHANNELS: 1
+    DC_UTILS_ALSA_MIXER_ARGS: "Capture=${DC_AUDIO_VOLUME}%,Mic Boost=${DC_AUDIO_BOOST}%"
+    DC_PCM_SPLIT_FILTER_CONF_AUDIO_SYNC_PERIOD_S: ""
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'audio(onboard)'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_AUDIO_FORMAT
+      default: 'S16LE'
+      options: ['S16LE', 'S32LE', 'F32LE']
+      display_strings_i18n:
+        - locale: und
+          name: Format
+          description: 音声データの形式
+    - key: DC_AUDIO_VOLUME
+      default: '100'
+      validation: '^([0-9]|[1-9][0-9]|100)$'
+      display_strings_i18n:
+        - locale: und
+          name: Volume
+          description: 音声データの音量
+          unit: "%"
+    - key: DC_AUDIO_BOOST
+      default: '0'
+      validation: '^([0-9]|[1-9][0-9]|100)$'
+      display_strings_i18n:
+        - locale: und
+          name: Boost
+          description: 音声データのブースト
+          unit: "%"

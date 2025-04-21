@@ -1,0 +1,31 @@
+From 76c6429dfb21a27c6e53b8612f2daa815d639ed0 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Tue, 12 Nov 2024 16:30:04 +0900
+Subject: [PATCH] Revert "bugfix issie 18826: containers do not restart after 
+ reboot when bound to virtual network interface"
+
+This reverts commit dfa4e77d8202f5c682056b59be3111eccddfb09a.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ src/import/contrib/init/systemd/docker.service | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/import/contrib/init/systemd/docker.service b/src/import/contrib/init/systemd/docker.service
+index d8c7867057..19caf2abde 100644
+--- a/src/import/contrib/init/systemd/docker.service
++++ b/src/import/contrib/init/systemd/docker.service
+@@ -1,8 +1,8 @@
+ [Unit]
+ Description=Docker Application Container Engine
+ Documentation=https://docs.docker.com
+-After=network-online.target docker.socket firewalld.service containerd.service time-set.target
+-Wants=network-online.target containerd.service
++After=network.target docker.socket firewalld.service containerd.service time-set.target
++Wants=containerd.service
+ Requires=docker.socket
+ 
+ [Service]
+-- 
+2.34.1
+

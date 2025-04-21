@@ -1,0 +1,7 @@
+id: intdash_server_request_timeout
+type: log
+diagnostic_category: alert
+diagnostic_description: "The server response time may be slower than expected."
+log_id: system-intdash-edge-agent2-1
+log_regex: .*detected slow response time for.*
+log_expiration: 30

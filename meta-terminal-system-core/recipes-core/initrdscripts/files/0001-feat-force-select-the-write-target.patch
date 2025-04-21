@@ -1,0 +1,26 @@
+From 4ceb31af2873a30f8dd48e253da5e7ef56861c84 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Fri, 7 Jun 2024 20:39:19 +0900
+Subject: [PATCH] feat: force select the write target
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ .../recipes-core/initrdscripts/files/init-install-efi-mender.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/init-install-efi-mender.sh b/init-install-efi-mender.sh
+index a5541306..e556069e 100644
+--- a/init-install-efi-mender.sh
++++ b/init-install-efi-mender.sh
+@@ -16,7 +16,7 @@
+ set -ue
+ PATH=/sbin:/bin:/usr/sbin:/usr/bin
+ 
+-devnode="@MENDER_STORAGE_DEVICE@"
++devnode=""
+ bootdev="$(echo /dev/$1 | sed 's@/$@@')"
+ 
+ if [ -z ${devnode} ] || [ ! -b ${devnode} ]; then
+-- 
+2.34.1
+

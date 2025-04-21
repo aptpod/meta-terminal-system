@@ -1,0 +1,8 @@
+id: docker_container_error
+type: log
+diagnostic_id: "%{syslog_identifier}"
+diagnostic_category: alert
+diagnostic_description: "ERROR [%{syslog_identifier}]: %{capture1}"
+log_unit: docker
+log_regex: '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z ERROR \[.*\]: (.*)'
+log_expiration: 60

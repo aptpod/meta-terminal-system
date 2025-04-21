@@ -1,0 +1,8 @@
+#!/bin/sh
+
+INVENTORY_PROVIDES_REPORTED_FLAG="/tmp/mender-inventory-provides-reported-flag"
+
+# Remove the flag to allow inventory reporting in the next run
+rm -f "$INVENTORY_PROVIDES_REPORTED_FLAG"
+
+exit 0

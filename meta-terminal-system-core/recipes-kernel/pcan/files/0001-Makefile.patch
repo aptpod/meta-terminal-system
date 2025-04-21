@@ -1,5 +1,7 @@
---- driver/Makefile.orig	2022-09-29 22:24:53.000000000 +0900
-+++ driver/Makefile	2023-01-13 12:15:22.270104424 +0900
+Upstream-Status: Inappropriate [configuration specific]
+---
+--- driver/Makefile.orig	2024-11-07 23:29:45.690281233 +0900
++++ driver/Makefile	2024-11-07 23:33:31.545485545 +0900
 @@ -113,92 +113,8 @@
  #
  # please modify only here if your kernel path is elsewhere located
@@ -16,7 +18,7 @@
 -	/usr/src/linux-$$UR \
 -	/lib/modules/$$UR/build \
 -	/usr/src/linux \
--	; do if [ -d $$d ]; then echo $$d; break; fi; done)
+-	; do if [ -d $$d ]; then echo $$d; break; elif [ -h $$d ]; then readlink -f $$d; break; fi; done)
 -endef
 -ifeq ($(KERNEL_LOCATION_1),)
 -$(error "Unable to automatically find the Kernel headers.\
@@ -104,15 +106,15 @@
  
  #
  # do it in another way for kernels less than 2.6.5
-@@ -597,6 +513,7 @@
+@@ -596,6 +512,7 @@
  # $ make clean
  clean:
- 	rm -f $(SRC)/*o $(SRC)/*~ $(SRC)/.*cmd *o *ko *~ .*cmd  $(DRV).mod.c Module.symvers modules.order .cache.mk
+ 	rm -f $(SRC)/*o $(SRC)/*~ $(SRC)/.*cmd *o *ko *~ .*cmd  $(DRV).mod.c Module.symvers modules.order .cache.mk $(DRV).mod
 +	$(MAKE) -C $(KERNEL_LOCATION) M=$(PWD) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) clean
  
  ifneq ($(USE_KBUILD),yes)
  # $ make mrproper
-@@ -632,6 +549,8 @@
+@@ -631,6 +548,8 @@
  DEPMOD_OPTS += $(KERNEL_VERSION)
  endif
  
@@ -120,5 +122,5 @@
 +	$(MAKE) -C $(KERNEL_LOCATION) M=$(PWD) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) modules_install
  
  install: install_files install_udev install_module
- 
 
+ 

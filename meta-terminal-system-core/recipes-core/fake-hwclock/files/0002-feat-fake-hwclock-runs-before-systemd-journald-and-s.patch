@@ -6,6 +6,7 @@ Subject: [PATCH] feat: fake-hwclock runs before systemd-journald and
  correctly before journaling begins and user login/logout records are updated,
  which in turn ensures accurate timestamps in the logs and on user sessions.
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
  debian/fake-hwclock.service | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

@@ -1,0 +1,45 @@
+From caf188bb7ba9a7c5b8d488195d7cca8a5e514f82 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Sat, 8 Jun 2024 00:12:41 +0900
+Subject: [PATCH] feat:install-ts2-config.txt
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ .../initrdscripts/files/init-install-efi-mender.sh | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
+
+diff --git a/init-install-efi-mender.sh b/init-install-efi-mender.sh
+index e556069e..f377df01 100644
+--- a/init-install-efi-mender.sh
++++ b/init-install-efi-mender.sh
+@@ -59,16 +59,24 @@ if [ -e /run/media/$1$2 ]; then
+     echo -n "OK to proceed? <y/n> "
+     read yn
+     if [ "$yn" = "y" ] || [ "$yn" = "Y" ]; then
++        umount ${devnode}@MENDER_BOOT_PART_NUMBER@ > /dev/null 2>&1 || true
++        umount ${devnode}@MENDER_ROOTFS_PART_A_NUMBER@ > /dev/null 2>&1 || true
++        umount ${devnode}@MENDER_ROOTFS_PART_B_NUMBER@ > /dev/null 2>&1 || true
++        umount ${devnode}@MENDER_DATA_PART_NUMBER@ > /dev/null 2>&1 || true
+         rc=0
+         bzcat /run/media/$1$2 | /bin/dd of=$devnode bs=8M || rc=$?
+         sync
+-        if [ $rc = 0 ]; then
+-            echo "Installation successful."
+-        else
++        if [ ! $rc = 0 ]; then
+             echo "/bin/dd returned error $rc. Review above log. Installation aborted"
+             /bin/sh
+             exit 1
+         fi
++        mount ${devnode}@MENDER_DATA_PART_NUMBER@ /data
++        echo "Writing /run/media/$1/ts2-config.txt to /data"
++        cp -a /run/media/$1/ts2-config.txt /data/ts2-config.txt
++        sync
++        umount /data
++        echo "Installation successful."
+     else
+         echo "Installation aborted"
+         /bin/sh
+-- 
+2.34.1
+

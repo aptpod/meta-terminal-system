@@ -1,0 +1,7 @@
+id: apt_usbtrx_ringbuffer_is_full
+type: log
+diagnostic_category: alert
+diagnostic_description: "Kernel module apt_usbtrx ringbuffer is full, please reduce transfer data."
+log_id: kernel
+log_regex: .*apt_usbtrx.*ringbuffer is full.*
+log_expiration: 10

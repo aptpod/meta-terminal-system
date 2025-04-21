@@ -3,6 +3,7 @@ From: nomoto <nomoto@aptpod.co.jp>
 Date: Tue, 10 May 2022 21:58:54 +0900
 Subject: [PATCH] add: update scripts
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
  src/mender-inventory-mender-configure | 23 +++++++++++++++++++++++
  1 file changed, 23 insertions(+)

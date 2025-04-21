@@ -1,0 +1,7 @@
+id: diskusage_data
+type: metric
+diagnostic_category: alert
+diagnostic_description: "partition `/data` usage has exceeded 75%, current usage is %{value}%"
+metric_id: "df./data.use_percent"
+metric_regex: ^(7[5-9]|[89][0-9]|100)
+metric_check_interval: 60

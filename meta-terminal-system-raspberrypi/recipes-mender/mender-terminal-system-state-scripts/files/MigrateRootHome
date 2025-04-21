@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# In Terminal System 2 version 1.2.0, due to the migration to scarthgap,
+# the home directory of the root user has been changed from /home/root to /root.
+# However, since /etc is managed by OverlayFS, /etc/passwd is retained, and in older versions,
+# the root user's home directory remains /home/root. Notably, the terminal-system-cored systemd unit
+# checks the root user's home directory, making migration necessary.
+# It also needs to support standalone updates and will be executed after installation.
+
+if grep -q '^root:.*:/home/root:' /etc/passwd; then
+    sed -i 's|/home/root|/root|g' /etc/passwd
+    echo "The root user's home directory has been updated from /home/root to /root."
+fi
+
+exit 0

@@ -5,6 +5,7 @@ Subject: [PATCH] fix: Change Before and After of systemd-machine-id-commit.servi
  Terminal System 2 does not work correctly when committing after localfs.target because /etc is overlayfs.
  Change the condition to commit before mounting /etc as overlayfs.
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
  units/systemd-machine-id-commit.service | 4 ++--
  1 file changed, 2 insertions(+), 2 deletions(-)

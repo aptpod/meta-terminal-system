@@ -22,65 +22,64 @@ substitution_variables:
       default: ''
       validation: '^/var/run/intdash/'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: FIFO Path
           description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
     - key: DC_TAG
       default: 'h264(YUY2)'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Tag
-          description: このデバイスコネクターのログを表示するときに使用するタグ
+          description: このデバイスコネクターのログメッセージに付与するタグ
     - key: DC_DEVICE_PATH
       default: '/dev/video0'
-      path_glob:
-        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
-        - /dev/video*
+      options_script: "/etc/core/docker-compose/measurement/services/Camera/device_path_edgeplant_usb_camera.sh"
+      cache_key_command: "echo -n edgeplant-usb-camera-device-path-$(ls -al /dev/v4l/by-id/* | md5sum -z)"
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Device Path
-          description: デバイスパスを指定することで、使用するカメラを選択
+          description: カメラのデバイスパス
     - key: DC_WIDTH
       default: '640'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Width
-          description: 取得する動画の解像度の幅
+          description: 動画の幅
           unit: pixel
     - key: DC_HEIGHT
       default: '480'
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Height
-          description: 取得する動画の解像度の高さ
+          description: 動画の高さ
           unit: pixel
     - key: DC_FPS
       default: '20'
       options: ['5', '10', '20']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Frame Rate
-          description: フレームレートを選択
+          description: フレームレート
           unit: fps
     - key: DC_VIDEOFLIP
       default: 'identity'
       options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Video Flip
-          description: ビデオフリップを選択
+          description: 回転・反転
     - key: DC_BITRATE
       default: '2000000'
       options: ['500000', '1000000', '2000000', '3000000', '5000000', '8000000']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: Bitrate
-          description: ビットレートを選択
+          description: ビットレート
           unit: bps
     - key: DC_ISCPV2COMPAT_FORMAT
       default: 'iscp_v2_compat'
       options: ['iscp_v2_compat', 'iscp_v2_compat_byte_stream']
       display_strings_i18n:
-        - locale: jpn
+        - locale: und
           name: iscp-v2-compat Format
-          description: '出力するiscp-v2-compatフォーマットの選択（iscp_v2_compat:H.264 Frame、iscp_v2_compat_byte_stream:H.264 Byte Stream [非推奨]）'
+          description: '送信時のデータ型（特別な理由がなければiscp_v2_compatを使用してください）'

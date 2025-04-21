@@ -1,3 +1,5 @@
+Upstream-Status: Inappropriate [configuration specific]
+---
 diff --git a/hostapd/main.c b/hostapd/main.c
 index c9ec38d..6df7b3e 100644
 --- a/hostapd/main.c

@@ -16,7 +16,7 @@ PR = "r0"
 
 inherit useradd mender-state-scripts
 
-DEPENDS += " docker-ce "
+DEPENDS += " docker-moby "
 
 USER_ADMIN = "admin"
 # maint user can only connected via remote ssh tunnel (see 'sshd_config' modified by openssh_%.bbappend)

@@ -1,0 +1,101 @@
+#!/bin/sh
+set -e
+
+# From Terminal System 2 version 1.2.0, Chronyd is enabled by default, and GPSD is enabled if onboard GPS can be used.
+# This can cause conflicts with existing settings where GPS (UBX), GPS (NMEA), and GPS device connector services also use the onboard GPS.
+# If the device connector service is using the onboard GPS, turn off sync_with_gps_pps of time_sync settings.
+
+# Definitions
+
+MENDER_CONF="/data/mender/mender.conf"
+TEMP_MOUNT_DIR=""
+
+cleanup() {
+    if [ -n "$TEMP_MOUNT_DIR" ] && mountpoint -q "$TEMP_MOUNT_DIR"; then
+        umount "$TEMP_MOUNT_DIR"
+    fi
+    if [ -n "$TEMP_MOUNT_DIR" ] && [ -d "$TEMP_MOUNT_DIR" ]; then
+        rmdir "$TEMP_MOUNT_DIR"
+    fi
+}
+
+# Get rootfs partition information
+
+ROOTFS_PART_A=$(jq -r '.RootfsPartA' "$MENDER_CONF")
+ROOTFS_PART_B=$(jq -r '.RootfsPartB' "$MENDER_CONF")
+if [ -z "$ROOTFS_PART_A" ] || [ -z "$ROOTFS_PART_B" ]; then
+  echo "Failed to check default gps device usage: partition information is blank in '$MENDER_CONF'." >&2
+  exit 1
+fi
+
+# Get current rootfs partition
+
+CURRENT_PART=$(mount | grep "on / " | awk '{print $1}')
+if [ -z "$CURRENT_PART" ]; then
+  echo "Failed to check default gps device usage: no root path found by mount command." >&2
+  exit 1
+fi
+
+# Get install rootfs partition
+
+if [ "$CURRENT_PART" = "$ROOTFS_PART_A" ]; then
+  INSTALL_PART="$ROOTFS_PART_B"
+elif [ "$CURRENT_PART" = "$ROOTFS_PART_B" ]; then
+  INSTALL_PART="$ROOTFS_PART_A"
+else
+  echo "Failed to check default gps device usage: root path '$CURRENT_PART' does not match '$ROOTFS_PART_A' or '$ROOTFS_PART_B'." >&2
+  exit 1
+fi
+
+# Reserve trap
+
+trap cleanup INT TERM EXIT
+
+# Find install rootfs mount point or mount it
+
+INSTALL_MOUNT_POINT=$(mount | grep "$INSTALL_PART" | awk '{print $3}')
+if [ -z "$INSTALL_MOUNT_POINT" ]; then
+  TEMP_MOUNT_DIR_CANDIDATE=$(mktemp -d /mnt-XXXXXX)
+  mount "$INSTALL_PART" "$TEMP_MOUNT_DIR_CANDIDATE"
+  TEMP_MOUNT_DIR="$TEMP_MOUNT_DIR_CANDIDATE"
+  INSTALL_MOUNT_POINT="$TEMP_MOUNT_DIR_CANDIDATE"
+fi
+
+# Check time_sync settings is not exist
+
+if [ -f "/var/lib/core/time_sync.json" ]; then
+  exit 0
+fi
+
+# Check default gps device
+
+gps=$(jq -r '.gps_device // ""' "$INSTALL_MOUNT_POINT/etc/core/default/gps.json" 2>/dev/null)
+if [ -z "$gps" ]; then
+  exit 0
+fi
+
+# Disable gps device if it used by a device connector service
+
+for fragment in /var/lib/core/docker-compose/measurement/device_connector/*fragment.json; do
+  disable_gps_pps=false
+
+  if grep "edgeplant-t1" /data/mender/device_type >/dev/null; then
+    if jq -e '.service_id == "GPS"' "$fragment" >/dev/null; then
+      disable_gps_pps=true
+    fi
+    if jq -e '.service_id == "GPS (UBX)"' "$fragment" >/dev/null; then
+      if jq -e '.service_substitutions | map(select(test("DC_DEVICE_PATH="))) | length == 0' "$fragment" >/dev/null; then
+        disable_gps_pps=true
+      fi
+    fi
+  fi
+
+  if grep -q "DC_DEVICE_PATH=${gps}" "$fragment"; then
+    disable_gps_pps=true
+  fi
+
+  if [ "$disable_gps_pps" = true ]; then
+    jq -c '.sync_with_gps_pps = false' "$INSTALL_MOUNT_POINT/etc/core/default/time_sync.json" >/var/lib/core/time_sync.json
+    break
+  fi
+done

@@ -6,6 +6,7 @@ Subject: [PATCH] feat:  fake-hwclock.service runs after local file systems are m
  fake-hwclock.service runs after the local file systems are mounted to ensure
  that /etc/fake-hwclock.data is accessible.
 
+Upstream-Status: Inappropriate [configuration specific]
 ---
  debian/fake-hwclock.service | 1 +
  1 file changed, 1 insertion(+)
