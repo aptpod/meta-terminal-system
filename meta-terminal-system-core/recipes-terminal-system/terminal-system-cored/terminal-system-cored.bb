@@ -46,10 +46,8 @@ SRC_URI = "file://${TS_RESOURCES_DIR}/cored.${TS_CORED_VERSION}.linux-${TARGET_G
            file://docker-compose/measurement/services/GPS/device_path.sh \
            file://docker-compose/measurement/services/GPS_(NMEA)_(System-Configured).yml \
            file://docker-compose/measurement/services/GPS_(UBX)_(System-Configured).yml \
-           file://docker-compose/measurement/services/H.264_for_EDGEPLANT_USB_Camera_(Pre-encoded).yml \
            file://docker-compose/measurement/services/MJPEG_for_EDGEPLANT_USB_Camera_(v4l2-src).yml \
            file://docker-compose/measurement/services/MJPEG_for_EDGEPLANT_USB_Camera.yml \
-           file://docker-compose/measurement/services/Camera/fps_ep1-vm02a.sh \
            file://docker-compose/measurement/services/SocketCAN.yml \
            file://docker-compose/measurement/services/SocketCAN_(Upstream).yml \
            file://docker-compose/measurement/services/SocketCAN_(Downstream).yml \

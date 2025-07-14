@@ -1,0 +1,40 @@
+From e88daef00b9a82eb9f14088aee6df49ecc71f015 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Mon, 30 Jun 2025 16:27:59 +0900
+Subject: [PATCH] feat: add support for 05-restore-custom-config script
+ execution
+
+Modified apply_scripts() to properly support the 05-restore-custom-config script by passing the backup file path when needed.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ src/mender-configure | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/src/mender-configure b/src/mender-configure
+index e2259ba..7a9a80b 100755
+--- a/src/mender-configure
++++ b/src/mender-configure
+@@ -57,8 +57,18 @@ apply_scripts() {
+         if [ "$QUIET" = 0 ]; then
+             echo "Executing $script"
+         fi
++
++        script_arg=""
++        if [ "$(basename $script)" = "05-restore-custom-config" ]; then
++            script_arg="$BACKUP"
++        fi
++
+         return_code=0
+-        "$script" "$CONFIG" || return_code=$?
++        if [ -n "$script_arg" ]; then
++            "$script" "$CONFIG" "$script_arg" || return_code=$?
++        else
++            "$script" "$CONFIG" || return_code=$?
++        fi
+         if [ $return_code -ne 0 ]; then
+             # Set the overall return code, but prioritize real errors over
+             # "reboot return code" (20).
+-- 
+2.25.1
+

@@ -23,7 +23,7 @@ environment:
     # full-scale 2000 dps: 0.001221729
     DC_IIO_SRC_CONF_SCAN_ELEMENTS: '[{name: anglvel_x, attr: {scale: &scale 0.001221729}}, {name: anglvel_y, attr: {scale: *scale}}, {name: anglvel_z, attr: {scale: *scale}}]'
     DC_IIO_SRC_CONF_APPLY_SCALE: true
-    DC_IIO_SRC_CONF_ADDITIONAL_SCALE_FACTOR: 10000.0
+    DC_IIO_SRC_CONF_ADDITIONAL_SCALE_FACTOR: 1000.0
     DC_IIO_SRC_CONF_SAMPLING_FREQUENCY: '"${DC_SAMPLING_FREQUENCY}"'
     DC_IIO_SRC_CONF_SEND_FREQUENCY: 5
     DC_IIO_SRC_CONF_TIMEOUT_MS: 2000

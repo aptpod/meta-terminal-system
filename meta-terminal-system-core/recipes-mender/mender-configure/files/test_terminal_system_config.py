@@ -2,8 +2,10 @@ import json
 import unittest
 import tempfile
 import os
+from unittest.mock import patch, MagicMock
 from terminal_system_config import TerminalSystemConfig
 from terminal_system_config import RequestsItem
+from terminal_system_config import list_keys
 
 class TestTerminalSystemConfig(unittest.TestCase):
 
@@ -11,7 +13,7 @@ class TestTerminalSystemConfig(unittest.TestCase):
         pass
 
     def tearDown(self):
-        if os.path.exists(self.config_path):
+        if hasattr(self, 'config_path') and os.path.exists(self.config_path):
             os.remove(self.config_path)
 
     def init(self, config):
@@ -285,6 +287,84 @@ class TestTerminalSystemConfig(unittest.TestCase):
 
         self.__get_requests_list(configs_current.copy(), configs_mender.copy(), False, expected_force_false)
         self.__get_requests_list(configs_current.copy(), configs_mender.copy(), True, expected_force_true)
+
+    @patch('terminal_system_config.print')
+    @patch('terminal_system_config.args')
+    def test_list_keys(self, mock_args, mock_print):
+        mock_args.addr = "localhost"
+        mock_args.port = 8081
+        mock_args.api_version = "api"
+        mock_args.user = ""
+        mock_args.password = ""
+
+        normal_keys = [
+            "network_connections",
+            "agent.connection",
+            "agent.transport",
+            "agent.upstreams",
+            "agent.downstreams",
+            "agent.filters_upstream",
+            "agent.filters_downstream",
+            "agent.deferred_upload",
+            "agent.streamer",
+            "agent.device_connectors_upstream",
+            "agent.device_connectors_downstream",
+            "device_connectors",
+            "terminal_system.identification",
+            "time_sync",
+            "gps",
+            "ip_allowlist",
+            "diagnostic_monitors",
+            "docker.composes"
+        ]
+
+        hidden_keys = [
+            "agent.measurements.suspend_deferred_upload",
+            "agent.measurements.unsuspend_deferred_upload"
+        ]
+
+        ts_config = TerminalSystemConfig()
+
+        with self.subTest(include_hidden=False):
+            mock_args.include_hidden = False
+            mock_print.reset_mock()
+
+            list_keys(ts_config)
+
+            printed_output = mock_print.call_args[0][0]
+            keys_list = json.loads(printed_output)
+
+            # Check that the output is a JSON list
+            self.assertIsInstance(keys_list, list)
+
+            # Check that all normal keys are included
+            expected_keys_without_hidden = normal_keys
+            self.assertEqual(set(keys_list), set(expected_keys_without_hidden))
+
+            # Check that hidden config items are not included
+            for hidden_key in hidden_keys:
+                self.assertNotIn(hidden_key, keys_list)
+
+        with self.subTest(include_hidden=True):
+            mock_args.include_hidden = True
+            mock_print.reset_mock()
+
+            list_keys(ts_config)
+
+            printed_output = mock_print.call_args[0][0]
+            keys_list = json.loads(printed_output)
+
+            # Check that the output is a JSON list
+            self.assertIsInstance(keys_list, list)
+
+            # Check that all keys (normal + hidden) are included
+            expected_keys_with_hidden = normal_keys + hidden_keys
+            self.assertEqual(set(keys_list), set(expected_keys_with_hidden))
+
+            # Check that hidden config items are included
+            for hidden_key in hidden_keys:
+                self.assertIn(hidden_key, keys_list)
+
 
 if __name__ == "__main__":
     unittest.main()

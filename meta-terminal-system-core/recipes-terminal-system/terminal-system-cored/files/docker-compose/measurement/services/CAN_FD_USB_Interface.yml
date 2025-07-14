@@ -15,14 +15,18 @@ command:
     - "/etc/dc_conf/ep_canfd.yml"
 environment:
     DC_EP_CANFD_SRC_CONF_PATH: ${DC_DEVICE_PATH}
+    DC_EP_CANFD_SRC_CONF_STORE_ENABLED: ${DC_STORE_ENABLED}
+    DC_EP_CANFD_SRC_CONF_DATA_NAME_PREFIX: ${DC_DATA_NAME_PREFIX}
     DC_EP_CANFD_SRC_CONF_LISTENONLY: 'false'
     DC_EP_CANFD_SRC_CONF_FD: ${DC_FD}
+    DC_EP_CANFD_SRC_CONF_FD_NON_ISO: ${DC_FD_NON_ISO}
     DC_EP_CANFD_SRC_CONF_BITRATE: ${DC_BITRATE}
     DC_EP_CANFD_SRC_CONF_SAMPLE_POINT: ${DC_SAMPLE_POINT}
     DC_EP_CANFD_SRC_CONF_DBITRATE: ${DC_DBITRATE}
     DC_EP_CANFD_SRC_CONF_DSAMPLE_POINT: ${DC_DSAMPLE_POINT}
     DC_EP_CANFD_SRC_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
     DC_EP_CANFD_SRC_CONF_ID_MAP: /var/lib/intdash/dc-ep_canfd-id_map
+    DC_EP_CANFD_SRC_STORE_COMPLETE_MAP: /var/lib/intdash/dc-ep_canfd-store_complete_map
     DC_EP_CANFD_SRC_CONF_AGENT_DAEMON_URL: http://127.0.0.1:50051
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
     DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
@@ -30,6 +34,7 @@ environment:
     DC_EP_CANFD_SINK_CONF_PATH: ${DC_DEVICE_PATH}
     DC_EP_CANFD_SINK_CONF_LISTENONLY: 'false'
     DC_EP_CANFD_SINK_CONF_FD: ${DC_FD}
+    DC_EP_CANFD_SINK_CONF_FD_NON_ISO: ${DC_FD_NON_ISO}
     DC_EP_CANFD_SINK_CONF_BITRATE: ${DC_BITRATE}
     DC_EP_CANFD_SINK_CONF_SAMPLE_POINT: ${DC_SAMPLE_POINT}
     DC_EP_CANFD_SINK_CONF_DBITRATE: ${DC_DBITRATE}
@@ -66,6 +71,19 @@ substitution_variables:
         - locale: und
           name: Device Path
           description: CAN FD USB Interfaceのデバイスパス
+    - key: DC_STORE_ENABLED
+      default: 'false'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: und
+          name: Store Enabled
+          description: データ保持機能の有効化（true:USB接続確立前のデータを取得する、false:USB接続確立前のデータを取得しない）
+    - key: DC_DATA_NAME_PREFIX
+      default: ''
+      display_strings_i18n:
+        - locale: und
+          name: Data Name Prefix
+          description: データ名に付与するプレフィックス（データ保持機能有効時のみ指定）※この設定でプレフィックスを指定する場合、アップストリームIPC設定のデータ名に付与するプレフィックスは必ず空文字にしてください。
     - key: DC_FD
       default: 'true'
       options: ['true', 'false']
@@ -73,6 +91,13 @@ substitution_variables:
         - locale: und
           name: CAN FD
           description: CAN FD有効化
+    - key: DC_FD_NON_ISO
+      default: 'false'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: und
+          name: non-ISO CAN FD
+          description: CAN FD使用時のnon-ISOモード（true:有効、false:無効）
     - key: DC_BITRATE
       default: '500000'
       options: ['125000', '250000', '500000', '1000000']
@@ -87,7 +112,7 @@ substitution_variables:
       display_strings_i18n:
         - locale: und
           name: Sample Point
-          description: CAN通信のサンプルポイント（設定が空文字の場合は自動計算）
+          description: CAN通信のサンプルポイント（設定が空文字の場合は自動計算される。自動計算時のサンプルポイント：500Kbps以下=0.875、500Kbps超〜800Kbps以下=0.800、800Kbps超=0.750）
     - key: DC_DBITRATE
       default: '5000000'
       validation: '^(|[1-9][0-9]*)$'
@@ -102,11 +127,11 @@ substitution_variables:
       display_strings_i18n:
         - locale: und
           name: Sample Point for Data Phase
-          description: CANデータ通信のサンプルポイント（設定が空文字の場合は自動計算）
+          description: CANデータ通信のサンプルポイント（設定が空文字の場合は自動計算される。自動計算時のサンプルポイント：500Kbps以下=0.875、500Kbps超〜800Kbps以下=0.800、800Kbps超=0.750）
     - key: DC_TIMESTAMP_MODE
       default: 'device'
       options: ['device', 'host']
       display_strings_i18n:
         - locale: und
           name: Timestamp Mode
-          description: データのタイムスタンプに使用するクロック（device:CAN FD USB Interfaceのクロック、host:Terminal Systemコンピューターのクロック）
+          description: データのタイムスタンプに使用するクロック（device:CAN FD USB Interfaceのクロック、host:Terminal Systemコンピューターのクロック）※データ保持機能を使用してUSB接続確立前のデータも取得する場合はdeviceを指定

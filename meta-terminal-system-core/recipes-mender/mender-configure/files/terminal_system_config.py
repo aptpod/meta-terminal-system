@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 # Parse args
 parser = argparse.ArgumentParser()
-parser.add_argument("config_path", type=str)
+parser.add_argument("config_path", type=str, nargs="?")
 parser.add_argument("--update", action="store_true")
 parser.add_argument("--no_send_inventory", action="store_true")
 parser.add_argument("--addr", type=str, default="localhost")
@@ -23,6 +23,8 @@ parser.add_argument("--api_version", type=str, default="api")
 parser.add_argument("--log", type=str, default="INFO")
 parser.add_argument("--user", type=str, default="")
 parser.add_argument("--password", type=str, default="")
+parser.add_argument("--list-keys", action="store_true", help="Output API list keys as JSON")
+parser.add_argument("--include-hidden", action="store_true", help="Include hidden config keys in --list-keys output")
 args = parser.parse_args()
 
 # logging setting
@@ -558,11 +560,11 @@ class TerminalSystemCoreUtils:
 
 
 class TerminalSystemConfig:
-    def __init__(self, config_path):
+    def __init__(self, config_path=None):
         self.config_value_max_length = 4096
         self.config_key_split_delimiter = "##"
         self.config_path = config_path
-        self.configs_mender = self.__load_config_file(self.config_path)
+        self.configs_mender = self.__load_config_file(self.config_path) if config_path else {}
         self.ts_core_utils = TerminalSystemCoreUtils(
             addr=args.addr,
             port=args.port,
@@ -668,14 +670,38 @@ class TerminalSystemConfig:
         return Result(ResultCode.SUCCESS)
 
 
+def list_keys(ts_config):
+    all_keys = list(ts_config.ts_core_utils.api_list.keys())
+
+    # Filter out hidden configs unless --include-hidden is specified
+    if args.include_hidden:
+        keys = all_keys
+    else:
+        keys = [key for key in all_keys if not ts_config.ts_core_utils.api_list.hidden_config(key)]
+
+    print(json.dumps(keys))
+
+
 def main():
-    config_path = args.config_path
-    if not os.path.exists(config_path):
-        logging.error(f"{config_path} does not exist.")
-        sys.exit(ResultCode.ERROR.value)
+    # Initialize TerminalSystemConfig
+    if args.list_keys:
+        ts_config = TerminalSystemConfig()
+    else:
+        config_path = args.config_path
+        if not config_path:
+            logging.error("config_path is required when not using --list-keys")
+            sys.exit(ResultCode.ERROR.value)
+        if not os.path.exists(config_path):
+            logging.error(f"{config_path} does not exist.")
+            sys.exit(ResultCode.ERROR.value)
+        ts_config = TerminalSystemConfig(config_path)
 
-    ts_config = TerminalSystemConfig(config_path)
+    # Handle list_keys option
+    if args.list_keys:
+        list_keys(ts_config)
+        return ResultCode.SUCCESS.value
 
+    # Handle normal operations
     if args.update:
         result = ts_config.update()
     else:
