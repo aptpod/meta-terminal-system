@@ -24,22 +24,16 @@ MAKE_TARGETS = "netdev"
 
 do_compile:append () {
 	cd ${S}/../tools
-	oe_runmake -C apt_usbtrx_enablets CC="${CC}" LDFLAGS="${LDFLAGS}"
-	oe_runmake -C apt_usbtrx_resetts CC="${CC}" LDFLAGS="${LDFLAGS}"
-	oe_runmake -C apt_usbtrx_serial_no CC="${CC}" LDFLAGS="${LDFLAGS}"
+	oe_runmake CC="${CC}" LDFLAGS="${LDFLAGS}"
 }
 
 do_install:append () {
-	cd ${S}
-	cd ../conf
+	cd ${S}/../conf
 	mkdir -p ${D}${sysconfdir}/udev/rules.d
 	cp -rd 30-apt-usb.rules ${D}${sysconfdir}/udev/rules.d
 
-	cd ../tools
-	install -d ${D}${bindir}
-	install -m 755 apt_usbtrx_enablets/apt_usbtrx_enablets ${D}${bindir}/apt_usbtrx_enablets
-	install -m 755 apt_usbtrx_resetts/apt_usbtrx_resetts ${D}${bindir}/apt_usbtrx_resetts
-	install -m 755 apt_usbtrx_serial_no/apt_usbtrx_serial_no ${D}${bindir}/apt_usbtrx_serial_no
-	install -m 755 apt_usbtrx_timesync_all.sh ${D}${bindir}/apt_usbtrx_timesync_all.sh
-	install -m 755 apt_usbtrx_fwupdate.py ${D}${bindir}/apt_usbtrx_fwupdate.py
+	# tools is installed in ${DESTDIR}/bin
+	cd ${S}/../tools
+	install -d ${D}${exec_prefix}
+	oe_runmake install DESTDIR=${D}${exec_prefix}
 }

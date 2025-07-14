@@ -2,7 +2,7 @@ diff --git a/drivers/media/usb/uvc/uvc_video.c b/drivers/media/usb/uvc/uvc_video
 index 39e5855a4c02..b1596ccf2ba5 100644
 --- a/drivers/media/usb/uvc/uvc_video.c
 +++ b/drivers/media/usb/uvc/uvc_video.c
-@@ -162,6 +162,23 @@ static void uvc_fixup_video_ctrl(struct uvc_streaming *stream,
+@@ -162,6 +162,24 @@ static void uvc_fixup_video_ctrl(struct uvc_streaming *stream,
  
  		ctrl->dwMaxPayloadTransferSize = bandwidth;
  	}
@@ -10,7 +10,8 @@ index 39e5855a4c02..b1596ccf2ba5 100644
 +        {
 +            static struct usb_device_id const cams[] = {
 +                {USB_DEVICE(0x1BCF, 0x0B09)}, //EDGEPLANT_CAMERA
-+                {USB_DEVICE(0x32B2, 0x0107)} //EP1-VM01A
++                {USB_DEVICE(0x32B2, 0x0107)}, //EP1-VM01A
++                {USB_DEVICE(0x32B2, 0x0108)} //EP1-VA01A
 +            };
 +            u32 it = 0;
 +            for (; it < sizeof(cams) / sizeof(struct usb_device_id); ++it) {

@@ -18,6 +18,7 @@ environment:
     DC_EP_CANFD_SINK_CONF_PATH: ${DC_DEVICE_PATH}
     DC_EP_CANFD_SINK_CONF_LISTENONLY: 'false'
     DC_EP_CANFD_SINK_CONF_FD: ${DC_FD}
+    DC_EP_CANFD_SINK_CONF_FD_NON_ISO: ${DC_FD_NON_ISO}
     DC_EP_CANFD_SINK_CONF_BITRATE: ${DC_BITRATE}
     DC_EP_CANFD_SINK_CONF_SAMPLE_POINT: ${DC_SAMPLE_POINT}
     DC_EP_CANFD_SINK_CONF_DBITRATE: ${DC_DBITRATE}
@@ -54,6 +55,13 @@ substitution_variables:
         - locale: und
           name: CAN FD
           description: CAN FD有効化
+    - key: DC_FD_NON_ISO
+      default: 'false'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: und
+          name: non-ISO CAN FD
+          description: CAN FD使用時のnon-ISOモード（true:有効、false:無効）
     - key: DC_BITRATE
       default: '500000'
       options: ['125000', '250000', '500000', '1000000']
@@ -68,7 +76,7 @@ substitution_variables:
       display_strings_i18n:
         - locale: und
           name: Sample Point
-          description: CAN通信のサンプルポイント（設定が空文字の場合は自動計算）
+          description: CAN通信のサンプルポイント（設定が空文字の場合は自動計算される。自動計算時のサンプルポイント：500Kbps以下=0.875、500Kbps超〜800Kbps以下=0.800、800Kbps超=0.750）
     - key: DC_DBITRATE
       default: '5000000'
       validation: '^(|[1-9][0-9]*)$'
@@ -83,7 +91,7 @@ substitution_variables:
       display_strings_i18n:
         - locale: und
           name: Sample Point for Data Phase
-          description: CANデータ通信のサンプルポイント（設定が空文字の場合は自動計算）
+          description: CANデータ通信のサンプルポイント（設定が空文字の場合は自動計算される。自動計算時のサンプルポイント：500Kbps以下=0.875、500Kbps超〜800Kbps以下=0.800、800Kbps超=0.750）
     - key: DC_TIMESTAMP_MODE
       default: 'device'
       options: ['device', 'host']
