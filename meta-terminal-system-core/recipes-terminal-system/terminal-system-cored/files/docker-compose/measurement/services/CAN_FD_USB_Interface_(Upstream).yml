@@ -105,7 +105,7 @@ substitution_variables:
           description: CAN通信のサンプルポイント（設定が空文字の場合は自動計算される。自動計算時のサンプルポイント：500Kbps以下=0.875、500Kbps超〜800Kbps以下=0.800、800Kbps超=0.750）
     - key: DC_DBITRATE
       default: '5000000'
-      validation: '^(|[1-9][0-9]*)$'
+      validation: '^(|[1-9][0-9]{0,5}|[1-7][0-9]{6}|8000000)$'
       display_strings_i18n:
         - locale: und
           name: Bitrate for Data Phase

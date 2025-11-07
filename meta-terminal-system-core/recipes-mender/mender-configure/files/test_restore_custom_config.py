@@ -13,7 +13,8 @@ from restore_custom_config import (
     extract_custom_settings,
     find_deleted_custom_settings,
     restore_deleted_settings,
-    save_json_file
+    save_json_file,
+    get_base_key_name
 )
 
 
@@ -329,6 +330,27 @@ class TestRestoreCustomConfig(unittest.TestCase):
             invalid_path = "/invalid/directory/file.json"
             result = save_json_file(invalid_path, test_data)
             self.assertFalse(result)
+
+    def test_split_key_handling(self):
+        """Test split key handling for 4096 character limit"""
+        self.assertEqual(get_base_key_name("device_connectors##0000000001"), "device_connectors")
+        self.assertEqual(get_base_key_name("custom_setting##0000000002"), "custom_setting")
+        self.assertEqual(get_base_key_name("regular_key"), "regular_key")
+
+    def test_split_key_filtering(self):
+        """Test that split API keys are properly filtered out"""
+        config = {
+            "device_connectors##0000000001": "api_part1",
+            "device_connectors##0000000002": "api_part2",
+            "custom_setting": "custom_value",
+            "long_custom_setting##0000000001": "custom_value_part1",
+            "long_custom_setting##0000000002": "custom_value_part2"
+        }
+        api_keys = ["device_connectors"]
+
+        result = extract_custom_settings(config, api_keys)
+        expected = {"custom_setting": "custom_value", "long_custom_setting##0000000001": "custom_value_part1", "long_custom_setting##0000000002": "custom_value_part2"}
+        self.assertEqual(result, expected)
 
 
 

@@ -14,7 +14,7 @@ environment:
     DC_V4L2_SRC_CONF_PATH: ${DC_DEVICE_PATH}
     DC_V4L2_SRC_WIDTH: ${DC_WIDTH}
     DC_V4L2_SRC_HEIGHT: ${DC_HEIGHT}
-    DC_V4L2_SRC_FPS: ${DC_FPS}
+    DC_V4L2_SRC_FPS: 30
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
     DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
 
@@ -57,11 +57,3 @@ substitution_variables:
           name: Height
           description: 動画の高さ
           unit: pixel
-    - key: DC_FPS
-      default: '15'
-      options: ['1', '5', '10', '15', '30']
-      display_strings_i18n:
-        - locale: und
-          name: Frame Rate
-          description: フレームレート
-          unit: fps
