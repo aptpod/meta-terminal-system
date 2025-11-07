@@ -44,6 +44,15 @@ def validate_file_paths():
     return True
 
 
+def get_base_key_name(key):
+    config_key_split_delimiter = "##"
+    if config_key_split_delimiter in key:
+        base_key, suffix = key.rsplit(config_key_split_delimiter, 1)
+        if suffix.isdigit():
+            return base_key
+    return key
+
+
 def load_json_file(file_path):
     try:
         with open(file_path, 'r') as f:
@@ -123,7 +132,12 @@ def extract_custom_settings(config, api_keys):
         return {}
 
     api_keys_set = set(api_keys)
-    custom_settings = {k: v for k, v in config.items() if k not in api_keys_set}
+    custom_settings = {}
+
+    for k, v in config.items():
+        base_key = get_base_key_name(k)
+        if base_key not in api_keys_set:
+            custom_settings[k] = v
 
     return custom_settings
 

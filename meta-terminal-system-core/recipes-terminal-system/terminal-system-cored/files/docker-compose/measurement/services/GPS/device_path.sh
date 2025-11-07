@@ -2,7 +2,7 @@
 set -e
 
 # Find device paths
-device_paths=($(find /dev/tty* /dev/serial/by-id/* /dev/serial/by-path/* 2>/dev/null))
+device_paths=($(find /dev -path '/dev/tty*' -o -path '/dev/serial/by-id/*' -o -path '/dev/serial/by-path/*'))
 
 # Remove gpsd device paths
 source /etc/default/gpsd || true
