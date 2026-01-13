@@ -201,6 +201,27 @@ class TestRestoreCustomConfig(unittest.TestCase):
             result = check_deployed_has_all_api_keys(deployed_config, api_keys)
             self.assertFalse(result)
 
+        # Test with split keys (## delimiter)
+        with self.subTest(scenario="split_keys_complete"):
+            deployed_config = {
+                "network_connections": '{"test": "value"}',
+                "device_connectors##0000000001": '{"part": "1"}',
+                "device_connectors##0000000002": '{"part": "2"}'
+            }
+            api_keys = ["network_connections", "device_connectors"]
+            result = check_deployed_has_all_api_keys(deployed_config, api_keys)
+            self.assertTrue(result)
+
+        # Test with only split keys (no base key present)
+        with self.subTest(scenario="only_split_keys"):
+            deployed_config = {
+                "device_connectors##0000000001": '{"part": "1"}',
+                "device_connectors##0000000002": '{"part": "2"}'
+            }
+            api_keys = ["device_connectors"]
+            result = check_deployed_has_all_api_keys(deployed_config, api_keys)
+            self.assertTrue(result)
+
     def test_extract_custom_settings(self):
         """Test custom settings extraction scenarios"""
         # Test with custom settings

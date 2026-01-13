@@ -1,0 +1,13 @@
+id: apt_usbtrx_fw_rx_dropped
+type: script
+diagnostic_category: alert
+diagnostic_description: "EDGEPLANT CAN FD USB Interface FW frame drops detected"
+script: |-
+  #!/usr/bin/env bash
+  for f in /sys/class/usbmisc/aptUSB*/device/fw_rx_dropped; do
+    [ -e "$f" ] || continue
+    v=$(cat "$f" 2>/dev/null)
+    [ -n "$v" ] && [ "$v" != "0" ] && exit 1
+  done
+  exit 0
+script_check_interval: 60

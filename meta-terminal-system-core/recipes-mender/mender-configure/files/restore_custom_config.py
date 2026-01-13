@@ -113,10 +113,10 @@ def check_deployed_has_all_api_keys(deployed_config, api_keys):
         logging.warning("No API keys provided for comparison")
         return False
 
-    deployed_keys = set(deployed_config.keys())
+    deployed_base_keys = set(get_base_key_name(k) for k in deployed_config.keys())
     api_keys_set = set(api_keys)
 
-    missing_keys = api_keys_set - deployed_keys
+    missing_keys = api_keys_set - deployed_base_keys
 
     if missing_keys:
         logging.debug(f"Deployed config is missing {len(missing_keys)} API keys: {sorted(missing_keys)}")
