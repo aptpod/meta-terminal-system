@@ -4,5 +4,11 @@ diagnostic_category: alert
 diagnostic_description: "Unexpected power interruption has occurred"
 script: |-
   #!/usr/bin/env bash
-  [ "$(last reboot | grep 'still running' | wc -l)" -eq 1 ]
+  for i in {1..10}; do
+    count=$(last reboot | grep 'still running' | wc -l)
+    [ "$count" -eq 1 ] && exit 0
+    [ "$count" -gt 1 ] && exit 1
+    [ "$i" -lt 10 ] && sleep 1
+  done
+  exit 1
 script_check_interval: 525600

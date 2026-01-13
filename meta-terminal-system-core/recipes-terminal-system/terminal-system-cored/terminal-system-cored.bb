@@ -12,6 +12,7 @@ SRC_URI = "file://${TS_RESOURCES_DIR}/cored.${TS_CORED_VERSION}.linux-${TARGET_G
            file://default/time_sync.json \
            file://diagnostic-monitors/agent_data_point_dropping.yml \
            file://diagnostic-monitors/agent_quitting.yml \
+           file://diagnostic-monitors/apt_usbtrx_fw_rx_dropped.yml \
            file://diagnostic-monitors/apt_usbtrx_ringbuffer_is_full.yml \
            file://diagnostic-monitors/diskusage_data.yml \
            file://diagnostic-monitors/diskusage_root.yml \
