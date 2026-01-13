@@ -7,13 +7,13 @@ Subject: [PATCH] feat: fake-hwclock runs before systemd-journald and
  which in turn ensures accurate timestamps in the logs and on user sessions.
 
 ---
- debian/fake-hwclock.service | 2 +-
+ fake-hwclock.service | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/debian/fake-hwclock.service b/debian/fake-hwclock.service
+diff --git a/fake-hwclock.service b/fake-hwclock.service
 index be34823..4cd9a40 100644
---- a/debian/fake-hwclock.service
-+++ b/debian/fake-hwclock.service
+--- a/fake-hwclock.service
++++ b/fake-hwclock.service
 @@ -3,7 +3,7 @@ Description=Restore / save the current clock
  Documentation=man:fake-hwclock(8)
  DefaultDependencies=no
