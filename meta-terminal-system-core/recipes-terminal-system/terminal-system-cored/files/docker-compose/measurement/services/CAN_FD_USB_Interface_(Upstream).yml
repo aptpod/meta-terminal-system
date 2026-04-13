@@ -15,7 +15,7 @@ command:
     - "/etc/dc_conf/ep_canfd_upstream.yml"
 environment:
     DC_EP_CANFD_SRC_CONF_PATH: ${DC_DEVICE_PATH}
-    DC_EP_CANFD_SRC_CONF_STORE_ENABLED: ${DC_STORE_ENABLED}
+    DC_EP_CANFD_SRC_CONF_STORE_ENABLED: true
     DC_EP_CANFD_SRC_CONF_STORE_MAX_DURATION_SEC: ${DC_STORE_MAX_DURATION}
     DC_EP_CANFD_SRC_CONF_DATA_NAME_PREFIX: ${DC_DATA_NAME_PREFIX}
     DC_EP_CANFD_SRC_CONF_LISTENONLY: ${DC_LISTENONLY}
@@ -55,13 +55,6 @@ substitution_variables:
         - locale: und
           name: Device Path
           description: CAN FD USB Interfaceのデバイスパス
-    - key: DC_STORE_ENABLED
-      default: 'false'
-      options: ['true', 'false']
-      display_strings_i18n:
-        - locale: und
-          name: Store Enabled
-          description: データ保持機能の有効化（true:USB接続確立前のデータを取得する、false:USB接続確立前のデータを取得しない）
     - key: DC_STORE_MAX_DURATION
       default: '300'
       validation: '^(0|[1-9][0-9]*)$'
