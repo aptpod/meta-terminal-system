@@ -23,3 +23,8 @@ services:
 
 volumes:
   intdash-lock:
+    name: intdash-lock-tmpfs
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs

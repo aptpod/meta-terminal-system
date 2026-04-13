@@ -28,8 +28,8 @@ FILES:${PN} += "${ROOT_HOME}"
 INSANE_SKIP:${PN} += "already-stripped"
 
 do_compile:prepend() {
-    if [ "${SRCREV_docker}" != "${EXPECT_DOCKER_REV}" ]; then
-        bbfatal "docker-moby version mismatch detected. Please update SRCREV_compose in docker-moby.bbappend and EXPECT_DOCKER_REV to match docker-moby.bb version."
+    if [ "${SRCREV_moby}" != "${EXPECT_MOBY_REV}" ]; then
+        bbfatal "docker-moby version mismatch detected. Please update SRCREV_compose and EXPECT_MOBY_REV in docker-moby.bbappend to match docker-moby.bb version."
     fi
 }
 
