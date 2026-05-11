@@ -1,0 +1,92 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Mon, 13 Apr 2026 13:18:49 +0900
+Subject: [PATCH] journal: ignore stat timestamps that predate TIME_EPOCH in
+ patch_realtime()
+
+patch_realtime() lowers the caller-provided realtime using a file's
+ctime/mtime/atime/crtime. However, if journald writes to a file while
+the system clock is still at the Unix epoch (typical on embedded devices
+without an early RTC), the stat fields are set to epoch time.
+patch_realtime() then replaces the correct filename-derived timestamp
+with epoch, and journal_directory_vacuum() deletes the file as if it
+were ~55 years old when MaxRetentionSec is set.
+
+Skip stat timestamps that predate TIME_EPOCH, since the build cannot
+legitimately produce journal entries older than that. Factor the
+repeated check into a patch_realtime_one() helper to avoid drift
+between the four call sites.
+
+---
+ src/libsystemd/sd-journal/journal-vacuum.c | 37 ++++++++++++++--------
+ 1 file changed, 24 insertions(+), 13 deletions(-)
+
+diff --git a/src/libsystemd/sd-journal/journal-vacuum.c b/src/libsystemd/sd-journal/journal-vacuum.c
+index 8296448..48de2d0 100644
+--- a/src/libsystemd/sd-journal/journal-vacuum.c
++++ b/src/libsystemd/sd-journal/journal-vacuum.c
+@@ -47,12 +47,31 @@ static int vacuum_compare(const struct vacuum_info *a, const struct vacuum_info
+         return strcmp(a->filename, b->filename);
+ }
+ 
++static void patch_realtime_one(usec_t candidate, usec_t epoch_usec, unsigned long long *realtime) {
++        assert(realtime);
++
++        if (!timestamp_is_set(candidate))
++                return;
++
++        /* Stat timestamps can be at the Unix epoch if journald touched a file before the system clock
++         * was synchronized (e.g. before RTC load on embedded boards). Ignore such values, otherwise
++         * patch_realtime() would clobber the correct filename-derived timestamp and cause retention
++         * checks to delete recent files. This does not cover the case where the filename itself was
++         * generated with an epoch timestamp. */
++        if (candidate < epoch_usec)
++                return;
++
++        if (candidate < *realtime)
++                *realtime = candidate;
++}
++
+ static void patch_realtime(
+                 int fd,
+                 const char *fn,
+                 const struct stat *st,
+                 unsigned long long *realtime) {
+ 
++        const usec_t epoch_usec = (usec_t) TIME_EPOCH * USEC_PER_SEC;
+         usec_t x;
+ 
+         /* The timestamp was determined by the file name, but let's see if the file might actually be older
+@@ -63,24 +82,16 @@ static void patch_realtime(
+         assert(st);
+         assert(realtime);
+ 
+-        x = timespec_load(&st->st_ctim);
+-        if (x > 0 && x != USEC_INFINITY && x < *realtime)
+-                *realtime = x;
+-
+-        x = timespec_load(&st->st_atim);
+-        if (x > 0 && x != USEC_INFINITY && x < *realtime)
+-                *realtime = x;
+-
+-        x = timespec_load(&st->st_mtim);
+-        if (x > 0 && x != USEC_INFINITY && x < *realtime)
+-                *realtime = x;
++        patch_realtime_one(timespec_load(&st->st_ctim), epoch_usec, realtime);
++        patch_realtime_one(timespec_load(&st->st_atim), epoch_usec, realtime);
++        patch_realtime_one(timespec_load(&st->st_mtim), epoch_usec, realtime);
+ 
+         /* Let's read the original creation time, if possible. Ideally we'd just query the creation time the
+          * FS might provide, but unfortunately there's currently no sane API to query it. Hence let's
+          * implement this manually... */
+ 
+-        if (fd_getcrtime_at(fd, fn, AT_SYMLINK_FOLLOW, &x) >= 0 && x < *realtime)
+-                *realtime = x;
++        if (fd_getcrtime_at(fd, fn, AT_SYMLINK_FOLLOW, &x) >= 0)
++                patch_realtime_one(x, epoch_usec, realtime);
+ }
+ 
+ static int journal_file_empty(int dir_fd, const char *name) {
+-- 
+2.43.0
+

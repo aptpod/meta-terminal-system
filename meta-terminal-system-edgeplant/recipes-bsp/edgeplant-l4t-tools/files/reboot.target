@@ -1,0 +1,36 @@
+#  SPDX-License-Identifier: LGPL-2.1-or-later
+#
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+# Override reboot.target to convert reboot to poweroff on EDGEPLANT T1.
+# This prevents cboot REDUNDANCY rotate from accumulating during warm reset,
+# which can cause silent OS version rollback on A/B rootfs configurations.
+#
+# On T1, poweroff with IG-ON triggers MCU-driven cold boot, which clears
+# the rotate counter. edgeplant-l4t-shutdown.service (WantedBy=poweroff.target)
+# runs the 1V8 OFF sequence required for a clean cold boot.
+
+[Unit]
+Description=System Reboot (via poweroff)
+Documentation=man:systemd.special(7)
+DefaultDependencies=no
+# Changed from systemd-reboot.service to poweroff.target
+# to pull in poweroff.target.wants/ (e.g. edgeplant-l4t-shutdown.service)
+#Requires=systemd-reboot.service
+#After=systemd-reboot.service
+Requires=poweroff.target
+After=poweroff.target
+Conflicts=systemd-reboot.service
+AllowIsolate=yes
+JobTimeoutSec=30min
+#JobTimeoutAction=reboot-force
+JobTimeoutAction=poweroff-force
+
+# Removed [Install] to avoid Alias=ctrl-alt-del.target conflict with poweroff.target
+#[Install]
+#Alias=ctrl-alt-del.target
