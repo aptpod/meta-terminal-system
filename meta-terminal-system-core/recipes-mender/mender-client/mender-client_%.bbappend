@@ -7,6 +7,7 @@ SRC_URI:append = " \
     file://inventory/mender-inventory-device-inventory \
     file://cpu-weight.conf \
     file://0001-feat-Increase-buffer-size-up-to-8-MB-to-allow-sendin.patch;patchdir=src/github.com/mendersoftware/mender \
+    file://0002-fix-Add-HTTP-TCP-TLS-timeouts-and-per-read-timeout-t.patch;patchdir=src/github.com/mendersoftware/mender \
 "
 
 FILES:${PN} += " \

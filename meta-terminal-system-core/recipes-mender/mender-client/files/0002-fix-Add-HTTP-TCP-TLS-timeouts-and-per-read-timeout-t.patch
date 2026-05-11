@@ -1,0 +1,154 @@
+From ed03631502094f193d87bf2c289837279d2210aa Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Wed, 18 Mar 2026 12:51:31 +0900
+Subject: [PATCH] fix: Add HTTP/TCP/TLS timeouts and per-read timeout to
+ improve reconnection delay
+
+Without proper timeouts, mender-client hangs for ~9 minutes when
+packets are silently dropped (e.g., LTE disconnection), relying on
+TCP Keep-Alive dead peer detection.
+
+Changes:
+- ResponseHeaderTimeout = 60s: Timeout waiting for response headers.
+  Normal API responses return within seconds. Without this, an HTTP
+  request on an ESTABLISHED connection hangs for ~9 minutes.
+- net.DialTimeout = 30s: Timeout for TCP connection establishment.
+  Previously relied on OS TCP SYN retry (~4m24s with tcp_syn_retries=6).
+  Applied to both DialSession (direct) and dialProxy (proxy) paths.
+- TLS handshake deadline = 30s: Timeout for TLS handshake via
+  SetDeadline on the underlying TCP connection. Applies to both
+  DialSession and DialUpgrade paths.
+- Per-read timeout = 5min: Wrap DialTLS connections with
+  readTimeoutConn that sets a read deadline before each Read() call.
+  Detects stalled connections during artifact downloads, matching
+  C++ mender-update's read_timeout_timer_ (MEN-8717).
+---
+ client/client.go                              | 31 +++++++++++++++++--
+ .../github.com/mendersoftware/openssl/net.go  | 17 +++++++++-
+ 2 files changed, 44 insertions(+), 4 deletions(-)
+
+diff --git a/client/client.go b/client/client.go
+index 4d9ae966..a102359e 100644
+--- a/client/client.go
++++ b/client/client.go
+@@ -296,6 +296,10 @@ func NewApiClient(conf Config) (*ApiClient, error) {
+ 	transport.DialContext = (&net.Dialer{
+ 		KeepAlive: connectionKeepaliveTime,
+ 	}).DialContext
++	// Timeout waiting for response headers to prevent hanging on dead peers.
++	// Without this, a silently dropped connection hangs for ~9 minutes
++	// until TCP Keep-Alive detects the dead peer.
++	transport.ResponseHeaderTimeout = 60 * time.Second
+ 
+ 	return &ApiClient{*client}, nil
+ }
+@@ -575,6 +579,20 @@ func newOpenSSLCtx(conf Config) (*openssl.Ctx, error) {
+ 	return ctx, nil
+ }
+ 
++// readTimeoutConn wraps a net.Conn to set a read deadline before each Read()
++// call. This provides per-read timeout to detect stalled connections during
++// artifact downloads, matching C++ mender-update's read_timeout_timer_
++// (MEN-8717).
++type readTimeoutConn struct {
++	net.Conn
++	readTimeout time.Duration
++}
++
++func (c *readTimeoutConn) Read(p []byte) (int, error) {
++	c.Conn.SetReadDeadline(time.Now().Add(c.readTimeout))
++	return c.Conn.Read(p)
++}
++
+ func newHttpsClient(conf Config) (*http.Client, error) {
+ 	ctx, err := newOpenSSLCtx(conf)
+ 	if err != nil {
+@@ -590,8 +608,15 @@ func newHttpsClient(conf Config) (*http.Client, error) {
+ 	transport := http.Transport{
+ 		DisableKeepAlives: disableKeepAlive,
+ 		IdleConnTimeout:   time.Duration(idleConnTimeoutSeconds) * time.Second,
+-		DialTLS: func(network string, addr string) (net.Conn, error) {
+-			return dialOpenSSL(ctx, &conf, network, addr)
++		DialTLS: func(network, addr string) (net.Conn, error) {
++			conn, err := dialOpenSSL(ctx, &conf, network, addr)
++			if err != nil {
++				return nil, err
++			}
++			return &readTimeoutConn{
++				Conn:        conn,
++				readTimeout: 5 * time.Minute,
++			}, nil
+ 		},
+ 	}
+ 
+@@ -781,7 +806,7 @@ func dialProxy(network string, addr string, proxyURL *url.URL) (net.Conn, error)
+ 		err  error
+ 	)
+ 	hostPort := getHostPort(proxyURL)
+-	conn, err := net.Dial(network, hostPort)
++	conn, err := net.DialTimeout(network, hostPort, 30*time.Second)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+diff --git a/vendor/github.com/mendersoftware/openssl/net.go b/vendor/github.com/mendersoftware/openssl/net.go
+index 5ca68824..e4fb625c 100644
+--- a/vendor/github.com/mendersoftware/openssl/net.go
++++ b/vendor/github.com/mendersoftware/openssl/net.go
+@@ -18,6 +18,7 @@ import (
+ 	"errors"
+ 	"net"
+ 	"runtime"
++	"time"
+ )
+ 
+ type listener struct {
+@@ -112,7 +113,7 @@ func DialSession(network, addr string, ctx *Ctx, flags DialFlags,
+ 		}
+ 		// TODO: use operating system default certificate chain?
+ 	}
+-	c, err := net.Dial(network, addr)
++	c, err := net.DialTimeout(network, addr, 30*time.Second)
+ 	if err != nil {
+ 		return nil, err
+ 	}
+@@ -135,11 +136,18 @@ func DialSession(network, addr string, ctx *Ctx, flags DialFlags,
+ 			return nil, err
+ 		}
+ 	}
++	// Set deadline for TLS handshake to prevent hanging when packets are
++	// silently dropped after TCP connect succeeds. Normal TLS handshake
++	// completes in milliseconds to a few seconds. 30 seconds provides
++	// more than 10x margin. Without this, a dropped connection hangs for
++	// ~11 minutes relying on TCP Keep-Alive dead peer detection.
++	conn.UnderlyingConn().SetDeadline(time.Now().Add(30 * time.Second))
+ 	err = conn.Handshake()
+ 	if err != nil {
+ 		conn.Close()
+ 		return nil, err
+ 	}
++	conn.UnderlyingConn().SetDeadline(time.Time{})
+ 	if flags&InsecureSkipHostVerification == 0 {
+ 		err = conn.VerifyHostname(host)
+ 		if err != nil {
+@@ -185,11 +193,18 @@ func DialUpgrade(addr string, tcpConn net.Conn, ctx *Ctx, flags DialFlags) (*Con
+ 			return nil, err
+ 		}
+ 	}
++	// Set deadline for TLS handshake to prevent hanging when packets are
++	// silently dropped after TCP connect succeeds. Normal TLS handshake
++	// completes in milliseconds to a few seconds. 30 seconds provides
++	// more than 10x margin. Without this, a dropped connection hangs for
++	// ~11 minutes relying on TCP Keep-Alive dead peer detection.
++	conn.UnderlyingConn().SetDeadline(time.Now().Add(30 * time.Second))
+ 	err = conn.Handshake()
+ 	if err != nil {
+ 		conn.Close()
+ 		return nil, err
+ 	}
++	conn.UnderlyingConn().SetDeadline(time.Time{})
+ 	if flags&InsecureSkipHostVerification == 0 {
+ 		err = conn.VerifyHostname(host)
+ 		if err != nil {
+-- 
+2.43.0
+
