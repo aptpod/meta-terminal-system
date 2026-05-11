@@ -9,6 +9,7 @@ SRC_URI:append = " \
     file://cpu-weight.conf \
     file://0001-feat-Allow-forced-commit-without-reboot-during-stand.patch \
     file://0001-feat-change-no_proxy-delimiter-to-comma.patch \
+    file://0003-fix-Add-connect-handshake-read-header-timeouts-to-pr.patch \
 "
 
 FILES:${PN} += " \
