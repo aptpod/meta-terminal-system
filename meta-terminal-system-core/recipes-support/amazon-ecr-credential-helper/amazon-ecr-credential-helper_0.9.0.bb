@@ -1,4 +1,4 @@
-ILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI = "${@bb.utils.contains('TS_FEATURES', 'include-ecr-credentials', 'file://docker-credential-ecr-login-default', '', d)} \
            https://amazon-ecr-credential-helper-releases.s3.us-east-2.amazonaws.com/${PV}/linux-${DPKG_ARCH}/docker-credential-ecr-login;name=${DPKG_ARCH}_bin \

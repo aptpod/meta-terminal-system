@@ -1,0 +1,35 @@
+From 824a5b952911a7e472542f43cce83d723759b521 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Fri, 5 Jun 2026 21:54:24 +0900
+Subject: [PATCH] feat: force device config restore on rollback
+
+Set deploy_options.force on the restored config during ArtifactRollback so the
+Terminal System API accepts values that reference a now-absent device (e.g. a
+hot-swapped device path). Without force the restore is rejected, failing the
+rollback and leaving the config inconsistent.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ src/mender-configure | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/mender-configure b/src/mender-configure
+index e2259ba..3cf8647 100755
+--- a/src/mender-configure
++++ b/src/mender-configure
+@@ -124,6 +124,12 @@ case "$STATE" in
+             exit 0
+         fi
+         safe_copy "$BACKUP" "$CONFIG"
++        # Re-apply the restored config with force so values for an absent device are accepted.
++        forced_config="$FILES/tmp/device-config-forced.json"
++        touch "$forced_config"
++        chmod $DEFAULT_PERMISSIONS "$forced_config"
++        jq '.deploy_options = {force: true}' "$CONFIG" > "$forced_config"
++        safe_copy "$forced_config" "$CONFIG"
+         RET=0
+         apply_scripts || RET=$?
+         if [ $RET -eq 20 ]; then
+-- 
+2.43.0
+

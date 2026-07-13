@@ -7,6 +7,7 @@ SRC_URI:append = " \
     file://0001-feat-add-support-for-05-restore-custom-config-script.patch \
     file://0001-add-update-scripts.patch \
     file://0002-add-dbus-auth-failed-flag-file.patch \
+    file://0005-feat-force-device-config-restore-on-rollback.patch \
 "
 SRC_URI:append:mender-image = " \
     file://state-scripts/CheckMenderConfigureReport \
@@ -26,6 +27,7 @@ RDEPENDS:${PN} += " \
     python3-requests \
     python3-json \
     python3-threading \
+    jq \
 "
 
 inherit python3native

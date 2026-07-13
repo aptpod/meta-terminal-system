@@ -36,7 +36,7 @@ function set_network_route() {
     connection="$(curl -fsL ${BASE_URL}/agent/connection || echo '')"
     server_url="$(echo "$connection" | jq -r '.server_url')"
     hostname="$(echo "$server_url" | sed 's|.*//||' | sed 's|/.*||')"
-    ip="$(timeout 1 getent hosts "$hostname" | awk '{ print $1 }' | tail -n1 || echo '')"
+    ip="$(timeout 1 getent ahostsv4 "$hostname" | awk '{ print $1 }' | tail -n1 || echo '')"
     if [ -n "$ip" ]; then
         NETWORK_ROUTE_IP="$ip"
     fi
