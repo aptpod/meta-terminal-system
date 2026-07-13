@@ -1,4 +1,4 @@
-ILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 # TODO: arm-32bit binaries have not been released
 SRC_URI = "${@bb.utils.contains('TS_FEATURES', 'include-ecr-credentials', 'file://docker-credential-ecr-login-default', '', d)}"
