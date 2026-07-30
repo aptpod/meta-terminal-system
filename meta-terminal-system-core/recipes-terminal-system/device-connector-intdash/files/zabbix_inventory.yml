@@ -2,7 +2,7 @@ task:
   - id: 1
     element: zabbix-src
     conf:
-      address: 0.0.0.0:10051
+      address: 127.0.0.1:10051
       inventories:
       - key: system.cpu.load[,avg1]
         value_type: float64
