@@ -4,7 +4,7 @@ services:
   intdash-edge-agent2:
     image: ${BASE_URI}/${IMAGE_NAME_AGENT2}:${IMAGE_TAG_AGENT2}
     healthcheck:
-      test: pidof intdash-agent-streamer
+      test: intdash-agentctl --measurement-server-socket /var/run/intdash/agentd-grpc.sock ping --with-streamer
       interval: 1s
       timeout: 1s
       retries: 1
@@ -14,7 +14,7 @@ services:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
       - NO_PROXY=${NO_PROXY}
-    command: intdash-agentctl run --address localhost:50051
+    command: intdash-agentctl --measurement-server-socket /var/run/intdash/agentd-grpc.sock streamer start --wait
     stop_grace_period: 30s
     volumes:
       - /var/run/core/intdash:/var/run/intdash

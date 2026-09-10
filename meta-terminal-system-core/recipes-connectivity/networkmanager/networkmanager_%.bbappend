@@ -14,7 +14,7 @@ FILES:${PN}:append:mender-image = " \
 
 FILES:${PN}-daemon += "${nonarch_libdir}/tmpfiles.d/networkmanager-state.conf"
 
-PACKAGECONFIG:append = "dhcpcd ppp modemmanager concheck"
+PACKAGECONFIG:append = " dhcpcd ppp modemmanager concheck"
 PACKAGECONFIG:remove = "vala"
 
 # The connectivity-check patch (0001-feat-treat-any-HTTP-response-as-online-when-connecti.patch)

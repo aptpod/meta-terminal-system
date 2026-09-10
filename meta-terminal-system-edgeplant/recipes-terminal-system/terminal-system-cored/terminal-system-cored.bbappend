@@ -6,12 +6,21 @@ SRC_URI:append:jasmine = " \
            file://diagnostic-monitors/forced_power_off.yml \
            file://diagnostic-monitors/unexpected_power_interruption.yml \
            file://docker-compose/measurement/services/Audio_(Onboard).yml \
-           file://docker-compose/measurement/services/GPS.yml \
+"
+SRC_URI:append:jasmine:mender-image = " \
+           file://state-scripts/MigrateAudioVolumeSettings \
+           file://state-scripts/MigrateGpsService \
 "
 
 do_install:append:jasmine() {
-    sed -i \
-        -e 's:@DEFAULT_GPS_DEVICE_PATH@:${DEFAULT_GPS_DEVICE_PATH}:' \
-        -e 's:@DEFAULT_GPS_UBX_BAUDRATE@:${DEFAULT_GPS_UBX_BAUDRATE}:' \
-        ${D}${sysconfdir}/core/docker-compose/measurement/services/GPS.yml
+    cat ${WORKDIR}/band-preset/em7430.yml \
+        ${WORKDIR}/band-preset/em7431.yml \
+        ${WORKDIR}/band-preset/em05gfa.yml \
+        ${WORKDIR}/band-preset/rm520n-gl.yml \
+        > ${D}${sysconfdir}/core/band-preset.yml
+}
+
+do_compile:append:jasmine:mender-image() {
+    cp ${WORKDIR}/state-scripts/MigrateAudioVolumeSettings ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateAudioVolumeSettings
+    cp ${WORKDIR}/state-scripts/MigrateGpsService ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateGpsService
 }

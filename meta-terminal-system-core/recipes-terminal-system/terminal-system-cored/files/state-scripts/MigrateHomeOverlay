@@ -1,0 +1,38 @@
+#!/bin/sh
+set -e
+
+# Migrate home directory overlay structure from .ssh only to full home directory
+# This script is executed after successful update (ArtifactCommit_Enter)
+# to clean up old workdir structure and ensure new structure is in place.
+
+OLD_WORK_ADMIN="/data/overlay/work/home/admin/.ssh"
+OLD_WORK_MAINT="/data/overlay/work/home/maint/.ssh"
+UPPER_ADMIN="/data/overlay/home/admin"
+WORK_ADMIN="/data/overlay/work/home/admin"
+UPPER_MAINT="/data/overlay/home/maint"
+WORK_MAINT="/data/overlay/work/home/maint"
+UPPER_ROOT="/data/overlay/home/root"
+WORK_ROOT="/data/overlay/work/home/root"
+
+# Create and set correct ownership for admin directories
+mkdir -p "$UPPER_ADMIN" "$WORK_ADMIN"
+chown admin:admin "$UPPER_ADMIN" "$WORK_ADMIN"
+chmod 755 "$UPPER_ADMIN" "$WORK_ADMIN"
+
+# Create and set correct ownership for maint directories
+mkdir -p "$UPPER_MAINT" "$WORK_MAINT"
+chown maint:maint "$UPPER_MAINT" "$WORK_MAINT"
+chmod 755 "$UPPER_MAINT" "$WORK_MAINT"
+
+# Create and set correct ownership for root directories
+mkdir -p "$UPPER_ROOT" "$WORK_ROOT"
+chown root:root "$UPPER_ROOT" "$WORK_ROOT"
+chmod 700 "$UPPER_ROOT" "$WORK_ROOT"
+
+# Keep old workdir for rollback compatibility
+# overlayfs will create its own work/ subdirectory in the new workdir and ignore the old .ssh/ directory
+# If we delete the old workdir and then rollback, the old image will fail to mount overlayfs
+# Note: upperdir (/data/overlay/home/admin/.ssh/*) is compatible with new structure
+# and requires no migration. Existing files will be visible under new overlay mount.
+
+exit 0

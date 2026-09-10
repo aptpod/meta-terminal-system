@@ -1,0 +1,16 @@
+#!/bin/sh
+set -e
+
+# Create overlay directories for mender-configure on data partition
+# Required for overlayfs mount of /usr/lib/mender-configure in read-only rootfs
+# This script ensures directories exist on devices updated from older images
+# that did not have this overlay configured.
+
+UPPER_DIR="/data/overlay/usr/lib/mender-configure"
+WORK_DIR="/data/overlay/work/usr/lib/mender-configure"
+
+mkdir -p "$UPPER_DIR" "$WORK_DIR"
+chown root:root "$UPPER_DIR" "$WORK_DIR"
+chmod 755 "$UPPER_DIR" "$WORK_DIR"
+
+exit 0

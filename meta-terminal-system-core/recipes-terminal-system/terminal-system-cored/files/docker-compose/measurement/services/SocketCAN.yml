@@ -54,6 +54,13 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: '<can_id>'
+      options: ['<can_id>']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名（CAN ID）
     - key: DC_INTERFACE
       default: 'can0'
       options_script: "/etc/core/docker-compose/measurement/services/SocketCAN/interface.sh"

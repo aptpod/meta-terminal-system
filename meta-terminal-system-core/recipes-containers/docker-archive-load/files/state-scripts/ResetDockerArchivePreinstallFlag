@@ -1,0 +1,17 @@
+#!/bin/sh
+set -e
+
+# Remove docker archive preinstall flag to reload all preinstall images on next boot
+# This ensures that when OS is updated, all preinstall Docker images are reloaded.
+
+LOADED_FLAG="/data/.docker_archive_preinstall_loaded"
+
+if [ -f "$LOADED_FLAG" ]; then
+    echo "Removing docker archive preinstall flag for next boot..."
+    rm -f "$LOADED_FLAG"
+    echo "Docker preinstall flag removed: $LOADED_FLAG"
+else
+    echo "Docker preinstall flag not found, nothing to remove."
+fi
+
+exit 0

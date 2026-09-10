@@ -1,0 +1,11 @@
+# Quectel EM05-G (NMEA tty on bInterfaceNumber 01)
+ACTION!="add", GOTO="em05_end"
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c7c", ATTRS{idProduct}=="030e", GOTO="em05_gps"
+
+GOTO="em05_end"
+
+LABEL="em05_gps"
+SUBSYSTEM=="tty", ATTRS{bInterfaceNumber}=="01", SYMLINK+="ttyGPS", TAG+="systemd", ENV{ID_CELLULAR_MODULE}="em05"
+
+LABEL="em05_end"

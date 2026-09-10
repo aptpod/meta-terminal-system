@@ -1,6 +1,6 @@
-From 56e4d59946d83c94b0004badc961534c9f1d9774 Mon Sep 17 00:00:00 2001
+From 0ab2f72d3ca527812ab119f44c11725c7959284d Mon Sep 17 00:00:00 2001
 From: nomoto <nomoto@aptpod.co.jp>
-Date: Mon, 11 Nov 2024 13:09:03 +0900
+Date: Thu, 25 Dec 2025 12:22:38 +0900
 Subject: [PATCH] add: dbus auth failed flag file
 
 ---
@@ -8,7 +8,7 @@ Subject: [PATCH] add: dbus auth failed flag file
  1 file changed, 3 insertions(+)
 
 diff --git a/src/mender-inventory-mender-configure b/src/mender-inventory-mender-configure
-index f531824..e098ca3 100755
+index 816d3ce..28da32d 100755
 --- a/src/mender-inventory-mender-configure
 +++ b/src/mender-inventory-mender-configure
 @@ -23,6 +23,7 @@ exec 1>&2
@@ -19,15 +19,15 @@ index f531824..e098ca3 100755
  
  # If the configuration file doesn't exist, exit silently
  if ! [ -f "$CONFIG" ]; then
-@@ -43,6 +44,8 @@ SERVER="$(echo "$DBUS_REPLY" | sed -ne '2p')"
- 
- if [ -z "$AUTH_TOKEN" ]; then
-     echo "An authentication token could not be obtained over DBus."
+@@ -46,6 +47,8 @@ if [ -z "$AUTH_TOKEN" ]; then
+     echo "mender-inventory-mender-configure: An authentication token could not be obtained over DBus."
+     # Don't produce an error. Most likely mender-auth is not ready or
+     # the device hasn't been accepted
 +    touch "$DBUS_AUTH_FAILED_FLAG_FILE"
 +    sync "$DBUS_AUTH_FAILED_FLAG_FILE"
-     exit 1
+     exit 0
  fi
  if [ -z "$SERVER" ]; then
 -- 
-2.34.1
+2.43.0
 

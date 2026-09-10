@@ -12,6 +12,18 @@ import logging
 from enum import Enum, auto
 from dataclasses import dataclass
 
+CONFIG_VALUE_MAX_LENGTH = 4096
+CONFIG_KEY_SPLIT_DELIMITER = "##"
+
+
+def get_base_key_name(key: str) -> str:
+    if CONFIG_KEY_SPLIT_DELIMITER in key:
+        base_key, suffix = key.rsplit(CONFIG_KEY_SPLIT_DELIMITER, 1)
+        if suffix.isdigit():
+            return base_key
+    return key
+
+
 # Parse args
 parser = argparse.ArgumentParser()
 parser.add_argument("config_path", type=str, nargs="?")
@@ -566,8 +578,6 @@ class TerminalSystemCoreUtils:
 
 class TerminalSystemConfig:
     def __init__(self, config_path=None):
-        self.config_value_max_length = 4096
-        self.config_key_split_delimiter = "##"
         self.config_path = config_path
         self.configs_mender = self.__load_config_file(self.config_path) if config_path else {}
         self.ts_core_utils = TerminalSystemCoreUtils(
@@ -578,31 +588,22 @@ class TerminalSystemConfig:
             password=args.password,
         )
 
-    def __merge_values(self, config_json):
-        merged_config = {}
-        keys_to_remove = []
+    def __merge_split_keys(self, config_json):
+        merged = {}
 
         sorted_keys = sorted(config_json.keys())
 
         for key in sorted_keys:
-            if self.config_key_split_delimiter in key:
-                base_key, suffix = key.rsplit(self.config_key_split_delimiter, 1)
-                if suffix.isdigit():
-                    if base_key not in merged_config:
-                        merged_config[base_key] = ""
-                    merged_config[base_key] += config_json[key]
-                    keys_to_remove.append(key)
+            base_key = get_base_key_name(key)
+            if base_key != key:
+                if base_key not in merged:
+                    merged[base_key] = ""
+                merged[base_key] += config_json[key]
             else:
-                if key not in merged_config:
-                    merged_config[key] = config_json[key]
+                if key not in merged:
+                    merged[key] = config_json[key]
 
-        for key in keys_to_remove:
-            del config_json[key]
-
-        for key, value in merged_config.items():
-            config_json[key] = value
-
-        return config_json
+        return merged
 
     def __load_config_file(self, config_path):
         config_json = {}
@@ -612,35 +613,31 @@ class TerminalSystemConfig:
                 if config_json is None:
                     config_json = {}
                 else:
-                    config_json = self.__merge_values(config_json)
+                    config_json = self.__merge_split_keys(config_json)
             except json.decoder.JSONDecodeError:
                 logging.warning("invalid config file, empty contents.")
                 pass
         return config_json
 
-    def __split_value(self, key, value, max_length):
-        if not isinstance(value, str):
-            raise TypeError(f"Value for key '{key}' must be a string.")
-
-        if len(value) <= max_length:
-            return {key: value}
-
-        parts = [value[i : i + max_length] for i in range(0, len(value), max_length)]
-        split_dict = {f"{key}{self.config_key_split_delimiter}{i+1:010d}": part for i, part in enumerate(parts)}
-        return split_dict
-
-    def __split_values(self, config_json):
+    def __split_long_values(self, config_json):
         split_config = {}
+
         for key, value in config_json.items():
-            if isinstance(value, str) and len(value) > self.config_value_max_length:
-                split_parts = self.__split_value(key, value, self.config_value_max_length)
-                split_config.update(split_parts)
+            if isinstance(value, str) and len(value) > CONFIG_VALUE_MAX_LENGTH:
+                parts = [
+                    value[i : i + CONFIG_VALUE_MAX_LENGTH]
+                    for i in range(0, len(value), CONFIG_VALUE_MAX_LENGTH)
+                ]
+                for i, part in enumerate(parts):
+                    split_key = f"{key}{CONFIG_KEY_SPLIT_DELIMITER}{i + 1:010d}"
+                    split_config[split_key] = part
             else:
                 split_config[key] = value
+
         return split_config
 
     def __write_config_file(self, config_path, config_json):
-        config_json = self.__split_values(config_json)
+        config_json = self.__split_long_values(config_json)
         with open(config_path, "w") as f:
             json.dump(config_json, f, sort_keys=True, indent=2)
 

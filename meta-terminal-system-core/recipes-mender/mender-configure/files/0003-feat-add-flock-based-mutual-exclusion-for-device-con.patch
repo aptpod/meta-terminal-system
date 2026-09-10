@@ -1,0 +1,94 @@
+From c99ca0dee9d05bfe9018972a5c0a11dbf8645967 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Mon, 2 Feb 2026 21:51:22 +0900
+Subject: [PATCH] feat: add flock-based mutual exclusion for device-config.json
+
+Add lock mechanism to mender-configure (ArtifactInstall/ArtifactRollback)
+and mender-inventory-mender-configure (update_scripts).
+
+Mender Client controls the call order internally, but Terminal System API
+also uses mender-configure update module to modify device-config.json,
+so locking is required for mutual exclusion.
+---
+ src/mender-configure                  | 16 ++++++++++++++++
+ src/mender-inventory-mender-configure | 16 ++++++++++++++++
+ 2 files changed, 32 insertions(+)
+
+diff --git a/src/mender-configure b/src/mender-configure
+index 7a9a80b..d8d3d81 100755
+--- a/src/mender-configure
++++ b/src/mender-configure
+@@ -19,6 +19,20 @@ CONFIG=${TEST_CONFIG:-/var/lib/mender-configure/device-config.json}
+ APPLY_DIR=${TEST_APPLY_DIR:-/usr/lib/mender-configure/apply-device-config.d}
+ DEFAULT_PERMISSIONS="0600"
+ 
++# Lock for mutual exclusion when modifying device-config.json.
++# Mender Client controls the call order internally, but Terminal System API
++# also uses this update module to modify device-config.json, so locking is required.
++DEVICE_CONFIG_LOCK_FILE=${TEST_LOCK_FILE:-/var/lock/mender-configure.lock}
++DEVICE_CONFIG_LOCK_TIMEOUT=30
++
++acquire_lock() {
++    exec 9>"$DEVICE_CONFIG_LOCK_FILE"
++    if ! flock -w "$DEVICE_CONFIG_LOCK_TIMEOUT" 9; then
++        echo "Failed to acquire lock on $DEVICE_CONFIG_LOCK_FILE (timeout after ${DEVICE_CONFIG_LOCK_TIMEOUT}s)" 1>&2
++        exit 1
++    fi
++}
++
+ STATE="$1"
+ FILES="$2"
+ 
+@@ -94,6 +108,7 @@ case "$STATE" in
+         ;;
+ 
+     ArtifactInstall)
++        acquire_lock
+         if [ -e "$CONFIG" ]; then
+             safe_copy "$CONFIG" "$BACKUP"
+         else
+@@ -123,6 +138,7 @@ case "$STATE" in
+         ;;
+ 
+     ArtifactRollback)
++        acquire_lock
+         if [ -e "$FILES/tmp/no-original" ]; then
+             # There was no preexisting configuration. Nothing to restore.
+             rm -f "$CONFIG"
+diff --git a/src/mender-inventory-mender-configure b/src/mender-inventory-mender-configure
+index 28da32d..e417a8c 100755
+--- a/src/mender-inventory-mender-configure
++++ b/src/mender-inventory-mender-configure
+@@ -25,6 +25,21 @@ CONFIG_CHECKSUM=${TEST_CONFIG_CHECKSUM:-/var/lib/mender-configure/device-config-
+ CONFIG_ENDPOINT=${TEST_CONFIG_ENDPOINT:-api/devices/v1/deviceconfig/configuration}
+ DBUS_AUTH_FAILED_FLAG_FILE=${TEST_DBUS_AUTH_FAILED_FLAG_FILE:-/tmp/mender-configure-dbus-auth-failed-flag}
+ 
++# Lock for mutual exclusion when modifying device-config.json.
++# Mender Client controls the call order internally, but Terminal System API
++# also uses mender-configure update module to modify device-config.json,
++# so locking is required.
++DEVICE_CONFIG_LOCK_FILE=${TEST_LOCK_FILE:-/var/lock/mender-configure.lock}
++DEVICE_CONFIG_LOCK_TIMEOUT=30
++
++acquire_lock() {
++    exec 9>"$DEVICE_CONFIG_LOCK_FILE"
++    if ! flock -w "$DEVICE_CONFIG_LOCK_TIMEOUT" 9; then
++        echo "Failed to acquire lock on $DEVICE_CONFIG_LOCK_FILE (timeout after ${DEVICE_CONFIG_LOCK_TIMEOUT}s)" 1>&2
++        exit 1
++    fi
++}
++
+ # If the configuration file doesn't exist, exit silently
+ if ! [ -f "$CONFIG" ]; then
+     exit 0
+@@ -77,6 +92,7 @@ update_scripts() {
+         fi
+     done
+ }
++acquire_lock
+ update_scripts
+ 
+ # Include the JWT token in the checksum to report again the
+-- 
+2.43.0
+

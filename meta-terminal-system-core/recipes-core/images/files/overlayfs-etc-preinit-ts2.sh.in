@@ -1,0 +1,97 @@
+#!/bin/sh
+# Expanded with Python str.format() by overlayfs-etc-ts2.bbclass: NAME inside
+# braces is a template placeholder, and any other literal brace breaks
+# do_rootfs with a KeyError. In shell code use $VAR only (never a brace form,
+# brace grouping or awk).
+
+echo "PREINIT: Start"
+
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+if {CREATE_MOUNT_DIRS}; then
+    mount -o remount,rw /
+
+    mkdir -p /proc
+    mkdir -p /sys
+    mkdir -p /run
+    mkdir -p /var/run
+    mkdir -p {OVERLAYFS_ETC_MOUNT_POINT}
+fi
+
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+
+[ -z "$CONSOLE" ] && CONSOLE="/dev/console"
+
+# Maintain Terminal System 2's existing directory structure
+UPPER_DIR={OVERLAYFS_ETC_MOUNT_POINT}/overlay/etc
+WORK_DIR={OVERLAYFS_ETC_MOUNT_POINT}/overlay/work/etc
+LOWER_DIR={OVERLAYFS_ETC_MOUNT_POINT}/overlay/lower/etc
+
+# The only place {OVERLAYFS_ETC_DEVICE} can be checked: once mounted here,
+# systemd-fsck skips it as mounted (-M). -y because preen refuses the
+# corruption classes left by power loss. Fail-open: never block the mount.
+if command -v e2fsck >/dev/null 2>&1; then
+    # capture the pre-repair state first: a successful repair wipes the error flag
+    FSCK_STATE=$(dumpe2fs -h {OVERLAYFS_ETC_DEVICE} 2>/dev/null | grep -E "^(Filesystem state|Lifetime writes)" | tr "\n" ";")
+    FSCK_OUT=$(e2fsck -y {OVERLAYFS_ETC_DEVICE} 2>&1)
+    FSCK_RC=$?
+    # kmsg because stdout does not reach the journal; writes are rate-limited,
+    # keep them few and one line each
+    echo "PREINIT: e2fsck {OVERLAYFS_ETC_DEVICE} rc=$FSCK_RC" >/dev/kmsg
+    echo "PREINIT: pre-fsck {OVERLAYFS_ETC_DEVICE}: $FSCK_STATE" >/dev/kmsg
+    if [ "$FSCK_RC" -ne 0 ]; then
+        echo "$FSCK_OUT" | head -n 5 | while read -r FSCK_LINE; do
+            echo "PREINIT: e2fsck: $FSCK_LINE" >/dev/kmsg
+        done
+    fi
+    # exit code is a bitmask: 1 and 2 mean repaired, 4 and up mean errors remain
+    if [ "$FSCK_RC" -ge 4 ]; then
+        echo "PREINIT: WARNING: {OVERLAYFS_ETC_DEVICE} still has errors (rc=$FSCK_RC), mounting anyway" >/dev/kmsg
+    fi
+else
+    echo "PREINIT: e2fsck not found, skipping check of {OVERLAYFS_ETC_DEVICE}" >/dev/kmsg
+fi
+
+if mount -n -t {OVERLAYFS_ETC_FSTYPE} \
+    -o {OVERLAYFS_ETC_MOUNT_OPTIONS} \
+    {OVERLAYFS_ETC_DEVICE} {OVERLAYFS_ETC_MOUNT_POINT}
+then
+    mkdir -p $UPPER_DIR
+    mkdir -p $WORK_DIR
+
+    # A repair may sweep the overlay upper into lost+found; without an upper
+    # shadow the pristine /etc is exposed and every account is locked. Detect
+    # only. The marker gate: before provisioning a missing shadow is normal.
+    if [ -f {OVERLAYFS_ETC_MOUNT_POINT}/.ts2-config-initialized ] && [ ! -f "$UPPER_DIR/shadow" ]; then
+        echo "PREINIT: WARNING: $UPPER_DIR/shadow missing, all accounts will be locked" >/dev/kmsg
+    fi
+
+    if {OVERLAYFS_ETC_EXPOSE_LOWER}; then
+        mkdir -p $LOWER_DIR
+        mount -o bind,ro /etc $LOWER_DIR
+    fi
+
+    # Determine overlay mount options based on kernel version
+    # kernel 4.19+ supports index, xino, redirect_dir, metacopy options
+    # For image-based updating (Mender), these should be disabled (Yocto recommendation)
+    # Ref: https://patchwork.yoctoproject.org/project/oe-core/patch/20220310131329.1906537-5-ch@denx.de/
+    KERNEL_VERSION=$(uname -r | cut -d. -f1-2)
+    KERNEL_MAJOR=$(echo $KERNEL_VERSION | cut -d. -f1)
+    KERNEL_MINOR=$(echo $KERNEL_VERSION | cut -d. -f2)
+
+    if [ "$KERNEL_MAJOR" -gt 4 ] || [ "$KERNEL_MAJOR" -eq 4 -a "$KERNEL_MINOR" -ge 19 ]; then
+        OVERLAY_OPTIONS=",index=off,xino=off,redirect_dir=off,metacopy=off"
+    else
+        OVERLAY_OPTIONS=""
+    fi
+
+    mount -n -t overlay \
+        -o upperdir=$UPPER_DIR,lowerdir=/etc,workdir=$WORK_DIR$OVERLAY_OPTIONS \
+        overlay /etc || \
+            echo "PREINIT: Mounting etc-overlay failed!"
+else
+    echo "PREINIT: Mounting {OVERLAYFS_ETC_MOUNT_POINT} failed!"
+fi
+
+echo "PREINIT: done; starting {SBIN_INIT_NAME}"
+exec {SBIN_INIT_NAME}

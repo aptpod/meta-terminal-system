@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Migrate deprecated "GPS" device connector service to "GPS (UBX)".
+# The "GPS" service was removed in version 1.3.0 and replaced by "GPS (UBX)".
+# This migration is required when updating from versions prior to 1.3.0.
+
+FRAGMENT_DIR="/var/lib/core/docker-compose/measurement/device_connector"
+
+log() {
+    echo "[MigrateGpsService] $1"
+}
+
+check_os_version() {
+    os_version="$(cat /etc/os-release | grep VERSION_ID | sed -e 's/^VERSION_ID=\(.*\)$/\1/')"
+
+    # Only migrate from versions prior to 1.3.0 (1.0.x, 1.1.x, 1.2.x)
+    if ! [[ $os_version =~ ^1\.[0-2]\. ]]; then
+        exit 0
+    fi
+}
+
+check_os_version
+
+# Process each fragment.json file
+for fragment_file in "$FRAGMENT_DIR"/*.fragment.json; do
+    [ -e "$fragment_file" ] || continue
+
+    service_id=$(jq -r '.service_id // empty' "$fragment_file" 2>/dev/null)
+    [ "$service_id" != "GPS" ] && continue
+
+    # Get fragment id from filename
+    fragment_id=$(basename "$fragment_file" .fragment.json)
+
+    # Update service_id
+    jq '.service_id = "GPS (UBX)"' "$fragment_file" > "${fragment_file}.tmp"
+    mv "${fragment_file}.tmp" "$fragment_file"
+
+    log "Migrated: id=$fragment_id, GPS -> GPS (UBX)"
+done
+
+exit 0

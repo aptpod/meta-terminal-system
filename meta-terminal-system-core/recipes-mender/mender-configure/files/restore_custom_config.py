@@ -8,6 +8,8 @@ import subprocess
 import logging
 from pathlib import Path
 
+CONFIG_KEY_SPLIT_DELIMITER = "##"
+
 # Parse args
 def parse_args():
     parser = argparse.ArgumentParser(description="Restore custom configuration settings")
@@ -45,9 +47,8 @@ def validate_file_paths():
 
 
 def get_base_key_name(key):
-    config_key_split_delimiter = "##"
-    if config_key_split_delimiter in key:
-        base_key, suffix = key.rsplit(config_key_split_delimiter, 1)
+    if CONFIG_KEY_SPLIT_DELIMITER in key:
+        base_key, suffix = key.rsplit(CONFIG_KEY_SPLIT_DELIMITER, 1)
         if suffix.isdigit():
             return base_key
     return key

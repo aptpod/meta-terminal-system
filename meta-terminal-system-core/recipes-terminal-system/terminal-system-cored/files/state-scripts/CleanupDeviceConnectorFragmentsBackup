@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# Cleanup device connector fragment backup files after successful commit.
+# At this point, rollback will not occur, so backups are no longer needed.
+
+FRAGMENT_DIR="/var/lib/core/docker-compose/measurement/device_connector"
+
+for backup_file in "$FRAGMENT_DIR"/*.fragment.json.bak; do
+    [ -e "$backup_file" ] || continue
+    rm "$backup_file"
+done
+
+exit 0

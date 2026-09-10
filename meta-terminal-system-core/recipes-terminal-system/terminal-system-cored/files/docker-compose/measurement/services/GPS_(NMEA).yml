@@ -31,6 +31,13 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: '<talker_id>/<sentence>'
+      options: ['<talker_id>/<sentence>']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名（トーカID/センテンス）
     - key: DC_DEVICE_PATH
       default: '@DEFAULT_GPS_DEVICE_PATH@'
       options_script: "/etc/core/docker-compose/measurement/services/GPS/device_path.sh"

@@ -1,0 +1,21 @@
+#!/bin/sh
+#
+# Migrate proxy configuration from /lib to /etc (overlayfs)
+# This script runs during ArtifactInstall_Leave phase (after installation, before reboot)
+# The migrated configuration will be applied on next boot (overlayfs-etc mounts /etc before systemd starts)
+#
+
+set -e
+
+OLDCONF="/lib/systemd/system.conf.d/99-terminal-system-core.conf"
+NEWCONF="/etc/systemd/system.conf.d/99-terminal-system-core.conf"
+
+# Check if migration is needed
+if [ -f "${OLDCONF}" ] && [ ! -f "${NEWCONF}" ]; then
+    echo "Migrating proxy configuration from ${OLDCONF} to ${NEWCONF}"
+    mkdir -p "$(dirname ${NEWCONF})"
+    cp "${OLDCONF}" "${NEWCONF}"
+    echo "Migration completed successfully"
+fi
+
+exit 0

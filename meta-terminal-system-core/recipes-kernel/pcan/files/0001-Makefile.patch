@@ -107,7 +107,7 @@
 @@ -596,6 +512,7 @@
  # $ make clean
  clean:
- 	rm -f $(SRC)/*o $(SRC)/*~ $(SRC)/.*cmd *o *ko *~ .*cmd  $(DRV).mod.c Module.symvers modules.order .cache.mk $(DRV).mod
+ 	rm -f $(SRC)/*.o $(SRC)/*~ $(SRC)/.*cmd *.o .*.o *.ko *~ .*cmd  $(DRV).mod.c Module.symvers modules.order .cache.mk $(DRV).mod
 +	$(MAKE) -C $(KERNEL_LOCATION) M=$(PWD) $(CMD_OPTS) EXTRA_CFLAGS="$(EXTRA_CFLAGS)" V=$(VERBOSE) clean
  
  ifneq ($(USE_KBUILD),yes)

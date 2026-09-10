@@ -32,5 +32,6 @@ deferred_upload:
   limit_data_storage: true
   data_storage_capacity: 102400
 streamer:
+  log_file: "/dev/stdout"
   channel_capacity: 10000000
   base_time_gps_synchronized_ntp_server: "127.0.0.1"

@@ -1,0 +1,24 @@
+#!/bin/sh
+# Workaround for boot race: gpsd may start before $DEVICES paths
+# appear, e.g. when an LTE modem's USB enumeration creates
+# /dev/ttyGPS late.
+set -u
+
+[ -r /etc/default/gpsd ] || exit 0
+. /etc/default/gpsd
+
+devs="${DEVICES:-}"
+[ -z "$devs" ] && exit 0
+
+# Per-device timeout 30s. RM520N-GL USB enumerate measured ~5s on R1
+# (6x margin), with headroom for slower future modems while staying
+# well below systemd's 90s default TimeoutStartSec for gpsd.service.
+# On timeout, exit 0 to let gpsd proceed (current behavior: freeing).
+for d in $devs; do
+    n=0
+    while [ ! -e "$d" ] && [ "$n" -lt 30 ]; do
+        sleep 1
+        n=$((n + 1))
+    done
+done
+exit 0

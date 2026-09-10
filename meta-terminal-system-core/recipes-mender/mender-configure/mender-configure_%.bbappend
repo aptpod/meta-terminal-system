@@ -4,13 +4,18 @@ SRC_URI:append = " \
     file://test_terminal_system_config.py \
     file://restore_custom_config.py \
     file://test_restore_custom_config.py \
+    file://advanced_settings.py \
+    file://test_advanced_settings.py \
     file://0001-feat-add-support-for-05-restore-custom-config-script.patch \
     file://0001-add-update-scripts.patch \
     file://0002-add-dbus-auth-failed-flag-file.patch \
+    file://0003-feat-add-flock-based-mutual-exclusion-for-device-con.patch \
+    file://0004-feat-add-UPDATE_ONLY-option-to-inventory-script.patch \
     file://0005-feat-force-device-config-restore-on-rollback.patch \
 "
 SRC_URI:append:mender-image = " \
     file://state-scripts/CheckMenderConfigureReport \
+    file://state-scripts/CreateMenderConfigureOverlay \
 "
 
 FILES:${PN} += " \
@@ -19,7 +24,12 @@ FILES:${PN} += " \
     ${libdir}/mender-configure/update-device-config.d/10-terminal-system-config \
     ${libdir}/mender-configure/restore-custom-config \
     ${libdir}/mender-configure/apply-device-config.d/05-restore-custom-config \
+    ${libdir}/mender-configure/advanced-settings \
     ${sysconfdir} \
+"
+FILES:${PN}:append:mender-image = " \
+    /data/overlay${libdir}/mender-configure \
+    /data/overlay/work${libdir}/mender-configure \
 "
 
 RDEPENDS:${PN} += " \
@@ -44,10 +54,12 @@ do_compile:append() {
     cd ${WORKDIR}
     python3 -B -m unittest test_terminal_system_config.py || bbfatal "termianl_system_config.py Test failed"
     python3 -B -m unittest test_restore_custom_config.py || bbfatal "restore_custom_config.py Test failed"
+    python3 -B -m unittest test_advanced_settings.py || bbfatal "advanced_settings.py Test failed"
 }
 
 do_compile:append:mender-image() {
     cp ${WORKDIR}/state-scripts/CheckMenderConfigureReport ${MENDER_STATE_SCRIPTS_DIR}/Sync_Leave_30_CheckMenderConfigureReport
+    cp ${WORKDIR}/state-scripts/CreateMenderConfigureOverlay ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_CreateMenderConfigureOverlay
 }
 
 do_install:append() {
@@ -62,6 +74,7 @@ EOF
     install -d ${D}/${libdir}/mender-configure
     install -m 755 ${WORKDIR}/terminal_system_config.py ${D}/${libdir}/mender-configure/terminal-system-config
     install -m 755 ${WORKDIR}/restore_custom_config.py ${D}/${libdir}/mender-configure/restore-custom-config
+    install -m 755 ${WORKDIR}/advanced_settings.py ${D}/${libdir}/mender-configure/advanced-settings
 
     # scripts are used for both apply/update, so they are managed with symbolic links
     install -d ${D}/${libdir}/mender-configure/apply-device-config.d
@@ -70,4 +83,10 @@ EOF
     ln -s ../terminal-system-config ${D}/${libdir}/mender-configure/update-device-config.d/10-terminal-system-config
     # install only apply
     ln -s ../restore-custom-config ${D}/${libdir}/mender-configure/apply-device-config.d/05-restore-custom-config
+}
+
+do_install:append:mender-image() {
+    # Create overlay directories for mender-configure on data partition
+    install -d ${D}/data/overlay${libdir}/mender-configure
+    install -d ${D}/data/overlay/work${libdir}/mender-configure
 }

@@ -25,7 +25,7 @@ validate_arg() {
  }
 prepare_datafile() {
     mkdir -p /mnt/rootfs /mnt/datafile
-    mount ${IMAGE_BASENAME}.ext4 /mnt/rootfs
+    mount -o ro ${IMAGE_BASENAME}.ext4 /mnt/rootfs
     mount ${DATAFILE} /mnt/datafile
 
     if [ "\${OPT_USE_MENDER}" = "false" ]; then
@@ -78,25 +78,23 @@ prepare_datafile() {
     fi
 
     if [ x != x\${USER_PASS_ROOT} -o x != x\${USER_PASS_ADMIN} -o x != x\${USER_PASS_MAINT} ]; then
-        if [ "aarch64" != "$(uname -m)" ]; then
-            cp -a /usr/bin/qemu-aarch64-static /mnt/rootfs/usr/bin/
-        fi
+        # Copy original passwd/shadow files to overlay directory first to avoid modifying rootfs
+        cp -a /mnt/rootfs/etc/passwd /mnt/rootfs/etc/shadow /mnt/datafile/overlay/etc/
 
+        # Directly edit /etc/shadow in overlay directory (not in rootfs)
+        # This avoids rootfs modification and eliminates the need for usermod/chroot/qemu
         if [ x != x\${USER_PASS_ROOT} ]; then
             echo "writing login password for root \"\${USER_PASS_ROOT}\""
-            chroot /mnt/rootfs /usr/sbin/usermod -p \${USER_PASS_ROOT} root
+            sed -i "s|^root:[^:]*:|root:\${USER_PASS_ROOT}:|" /mnt/datafile/overlay/etc/shadow
         fi
         if [ x != x\${USER_PASS_ADMIN} ]; then
             echo "writing login password for admin \"\${USER_PASS_ADMIN}\""
-            chroot /mnt/rootfs /usr/sbin/usermod -p \${USER_PASS_ADMIN} admin
+            sed -i "s|^admin:[^:]*:|admin:\${USER_PASS_ADMIN}:|" /mnt/datafile/overlay/etc/shadow
         fi
         if [ x != x\${USER_PASS_MAINT} ]; then
             echo "writing login password for maint \"\${USER_PASS_MAINT}\""
-            chroot /mnt/rootfs /usr/sbin/usermod -p \${USER_PASS_MAINT} maint
+            sed -i "s|^maint:[^:]*:|maint:\${USER_PASS_MAINT}:|" /mnt/datafile/overlay/etc/shadow
         fi
-
-        cp -a /mnt/rootfs/etc/passwd /mnt/rootfs/etc/shadow /mnt/datafile/overlay/etc/
-        rm -f /mnt/rootfs/usr/bin/qemu-aarch64-static
     fi
 
     umount /mnt/datafile
@@ -108,15 +106,9 @@ if [ "\$(id -u)" -ne 0 ]; then
     echo "Please run as root."
     exit 1
 fi
-for cmd in python jq; do
+for cmd in python jq sed; do
     if ! which \${cmd} >/dev/null 2>&1; then
         echo "This installer requires '\${cmd}' command."
-        exit 1
-    fi
-done
-for pkg in qemu-user-static; do
-    if ! dpkg -l | grep -q "\${pkg}"; then
-        echo "This installer requires '\${pkg}' package."
         exit 1
     fi
 done

@@ -2,7 +2,6 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI:append = " \
 	file://10-silence.conf \
 	file://10-skip-relinquish.conf \
-	file://0001-fix-Change-Before-and-After-of-systemd-machine-id-co.patch \
 	file://0001-fix-ExecStop-of-systemd-update-utmp.service-is-not-e.patch \
 	file://0002-journal-ignore-stat-timestamps-predating-TIME_EPOCH.patch \
 "

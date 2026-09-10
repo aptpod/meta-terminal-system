@@ -1,0 +1,152 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+runtime: nvidia
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /tmp/argus_socket:/tmp/argus_socket # gstreamer fails to open the camera without the Argus daemon socket
+  - /etc/enctune.conf:/etc/enctune.conf # To enable omxh264enc. see, https://aptpod-jp.atlassian.net/wiki/spaces/INTDASHCORE/pages/1074169039/Docker+T1
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/${DC_PIPELINE_CONFIG_FILE}"
+environment:
+    # gstreamer_h264.yml
+    DC_PROCESS_SRC_CONF_COMMAND: ${DC_GST_PIPELINE}
+    DC_H264_SPLIT_FILTER_CONF_DELAY_MS: 100
+    DC_H264_SPLIT_FILTER_CONF_FORMAT: iscp_v2_compat
+    # gstreamer_rtp.yml
+    DC_GSTREAMER_SRC_PIPELINE: ${DC_GST_PIPELINE}
+    DC_ISCP_V2_COMPAT_FILTER_NAME: ${DC_DATA_NAME}
+    DC_ISCP_V2_COMPAT_FILTER_MEDIA_TYPE: ${DC_MEDIA_TYPE}
+    DC_ISCP_V2_COMPAT_MODIFY_HEADER_OFFSET: -100
+    # common
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+    GST_DEBUG: 2
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'EP1-VM01Ax4'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_OUTPUT_DATA_TYPE
+      default: 'H.264 RTP Packet (from JPEG)'
+      presets:
+        - name: H.264 Frame (from JPEG)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_h264.yml
+            DC_GST_PIPELINE: gst-launch-1.0 -q compositor start-time-selection=1 background=1 name=mix sink_0::xpos=0 sink_0::ypos=0 sink_0::alpha=1 sink_0::zorder=0 sink_1::xpos=640 sink_1::ypos=0 sink_1::alpha=1 sink_1::zorder=1 sink_2::xpos=0 sink_2::ypos=480 sink_2::alpha=1 sink_2::zorder=2 sink_3::xpos=640 sink_3::ypos=480 sink_3::alpha=1 sink_3::zorder=3 ! queue ! omxh264enc iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} insert-sps-pps=true insert-vui=true profile=baseline ! video/x-h264,stream-format=byte-stream ! queue ! h264parse ! fdsink fd=1 v4l2src device=${DC_DEVICE_PATH_1} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_1} ! mix.sink_0 v4l2src device=${DC_DEVICE_PATH_2} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_2} ! mix.sink_1 v4l2src device=${DC_DEVICE_PATH_3} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_3} ! mix.sink_2 v4l2src device=${DC_DEVICE_PATH_4} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_4} ! mix.sink_3
+        - name: H.264 RTP Packet (from JPEG)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_rtp.yml
+            DC_GST_PIPELINE: compositor start-time-selection=1 background=1 name=mix sink_0::xpos=0 sink_0::ypos=0 sink_0::alpha=1 sink_0::zorder=0 sink_1::xpos=640 sink_1::ypos=0 sink_1::alpha=1 sink_1::zorder=1 sink_2::xpos=0 sink_2::ypos=480 sink_2::alpha=1 sink_2::zorder=2 sink_3::xpos=640 sink_3::ypos=480 sink_3::alpha=1 sink_3::zorder=3 ! queue ! omxh264enc iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} insert-sps-pps=true insert-vui=true profile=baseline ! video/x-h264,stream-format=byte-stream ! queue ! h264parse config-interval=-1 ! rtph264pay ! queue ! appsink name=dcsink v4l2src device=${DC_DEVICE_PATH_1} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_1} ! mix.sink_0 v4l2src device=${DC_DEVICE_PATH_2} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_2} ! mix.sink_1 v4l2src device=${DC_DEVICE_PATH_3} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_3} ! mix.sink_2 v4l2src device=${DC_DEVICE_PATH_4} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_4} ! mix.sink_3
+            DC_MEDIA_TYPE: h264
+        - name: VP9 RTP Packet (from JPEG)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_rtp.yml
+            DC_GST_PIPELINE: compositor start-time-selection=1 background=1 name=mix sink_0::xpos=0 sink_0::ypos=0 sink_0::alpha=1 sink_0::zorder=0 sink_1::xpos=640 sink_1::ypos=0 sink_1::alpha=1 sink_1::zorder=1 sink_2::xpos=0 sink_2::ypos=480 sink_2::alpha=1 sink_2::zorder=2 sink_3::xpos=640 sink_3::ypos=480 sink_3::alpha=1 sink_3::zorder=3 ! queue ! nvvidconv ! video/x-raw(memory:NVMM) ! nvv4l2vp9enc control-rate=1 iframeinterval=${DC_FPS} bitrate=${DC_BITRATE} ! queue ! rtpvp9pay ! queue ! appsink name=dcsink v4l2src device=${DC_DEVICE_PATH_1} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_1} ! mix.sink_0 v4l2src device=${DC_DEVICE_PATH_2} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_2} ! mix.sink_1 v4l2src device=${DC_DEVICE_PATH_3} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_3} ! mix.sink_2 v4l2src device=${DC_DEVICE_PATH_4} io-mode=4 ! queue ! videorate drop-only=true ! image/jpeg,width=640,height=480,framerate=${DC_FPS}/1 ! jpegdec ! videoflip video-direction=${DC_VIDEOFLIP_4} ! mix.sink_3
+            DC_MEDIA_TYPE: vp9
+      display_strings_i18n:
+        - locale: und
+          name: Output Data Type
+          description: 出力データ型
+    - key: DC_DATA_NAME
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/data_name.sh"
+      cache_key_command: "echo -n Camera-data-name"
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名
+    - key: DC_DEVICE_PATH_1
+      default: '/dev/video0'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: und
+          name: Device Path for Upper Left
+          description: 左上の動画を取得するカメラのデバイスパス
+    - key: DC_DEVICE_PATH_2
+      default: '/dev/video1'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: und
+          name: Device Path for Upper Right
+          description: 右上の動画を取得するカメラのデバイスパス
+    - key: DC_DEVICE_PATH_3
+      default: '/dev/video2'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: und
+          name: Device Path for Lower Left
+          description: 左下の動画を取得するカメラのデバイスパス
+    - key: DC_DEVICE_PATH_4
+      default: '/dev/video3'
+      path_glob:
+        - /dev/v4l/by-id/usb-aptpod__Inc._EP1-VM01A*
+        - /dev/video*
+      display_strings_i18n:
+        - locale: und
+          name: Device Path for Lower Right
+          description: 右下の動画を取得するカメラのデバイスパス
+    - key: DC_FPS
+      default: '15'
+      options: ['15']
+      display_strings_i18n:
+        - locale: und
+          name: Frame Rate
+          description: フレームレート
+          unit: fps
+    - key: DC_VIDEOFLIP_1
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: und
+          name: Video Flip for Upper Left
+          description: 左上の動画の回転・反転
+    - key: DC_VIDEOFLIP_2
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: und
+          name: Video Flip for Upper Right
+          description: 右上の動画の回転・反転
+    - key: DC_VIDEOFLIP_3
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: und
+          name: Video Flip for Lower Left
+          description: 左下の動画の回転・反転
+    - key: DC_VIDEOFLIP_4
+      default: 'identity'
+      options: ['identity', '180', '90r', '90l', 'horiz', 'vert']
+      display_strings_i18n:
+        - locale: und
+          name: Video Flip for Lower Right
+          description: 右下の動画の回転・反転
+    - key: DC_BITRATE
+      default: '2000000'
+      options: ['500000', '1000000', '2000000', '3000000', '5000000', '8000000']
+      display_strings_i18n:
+        - locale: und
+          name: Bitrate
+          description: ビットレート
+          unit: bps

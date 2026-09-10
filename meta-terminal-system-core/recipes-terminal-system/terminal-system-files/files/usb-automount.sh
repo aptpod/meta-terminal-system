@@ -18,6 +18,8 @@ if [[ $FSYS == "vfat" ]]; then
     OPT+=nosuid,noexec,nodev,flush,gid=100,dmask=000,fmask=111
 elif [[ $FSYS == "ntfs" ]]; then
     OPT+=defaults,nosuid,noexec,nodev,gid=100,dmask=000,fmask=111
+elif [[ $FSYS == "exfat" ]]; then
+    OPT+=nosuid,noexec,nodev,sync,gid=100,dmask=000,fmask=111
 else
     OPT+=nosuid,noexec,nodev,sync
 fi

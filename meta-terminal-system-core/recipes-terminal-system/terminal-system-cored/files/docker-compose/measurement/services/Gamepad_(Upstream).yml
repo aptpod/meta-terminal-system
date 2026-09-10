@@ -33,6 +33,13 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: 'gamepad'
+      options: ['gamepad']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名
     - key: DC_DEVICE_PATH
       default: '/dev/input/js0'
       options_script: "/etc/core/docker-compose/measurement/services/Gamepad/device_path.sh"

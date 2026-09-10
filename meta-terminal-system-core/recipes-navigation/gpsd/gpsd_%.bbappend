@@ -1,14 +1,19 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI += "file://restart.conf"
+SRC_URI += "file://gpsd-wait-device \
+            file://restart.conf \
+"
 
 PACKAGECONFIG[dbus] = "dbus_export='true',dbus_export='false',dbus"
 
 FILES:${PN} += "${systemd_unitdir}/system/gpsd.service.d"
 
 do_install:append () {
+    install -D -m 0755 ${WORKDIR}/gpsd-wait-device ${D}${bindir}/gpsd-wait-device
+
     sed -i \
         -e "/ExecStart=/i ExecCondition=/bin/sh -c '/usr/bin/cored generate gpsd-env >${sysconfdir}/default/gpsd.default'" \
+        -e "/ExecStart=/i ExecStartPre=/usr/bin/gpsd-wait-device" \
         -e '/ExecStart=/i ExecStartPre=/bin/sh -c "eval $(/usr/bin/cored generate gps-init)"' \
         ${D}${systemd_unitdir}/system/gpsd.service
 

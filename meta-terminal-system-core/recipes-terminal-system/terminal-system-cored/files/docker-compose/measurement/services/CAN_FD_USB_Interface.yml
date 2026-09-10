@@ -28,7 +28,7 @@ environment:
     DC_EP_CANFD_SRC_CONF_TIMESTAMP_MODE: ${DC_TIMESTAMP_MODE}
     DC_EP_CANFD_SRC_CONF_ID_MAP: /var/lib/intdash/dc-ep_canfd-id_map
     DC_EP_CANFD_SRC_STORE_COMPLETE_MAP: /var/lib/intdash/dc-ep_canfd-store_complete_map
-    DC_EP_CANFD_SRC_CONF_AGENT_DAEMON_URL: http://127.0.0.1:50051
+    DC_EP_CANFD_SRC_CONF_AGENT_DAEMON_URL: unix:///var/run/intdash/agentd-grpc.sock
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
     DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
     DC_FILE_SRC_CONF_PATH: ${DC_DOWNSTREAM_FIFO_0}
@@ -63,6 +63,13 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: '<can_id>'
+      options: ['<can_id>']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名（CAN ID）
     - key: DC_DEVICE_PATH
       default: '/dev/aptUSB0'
       path_glob:

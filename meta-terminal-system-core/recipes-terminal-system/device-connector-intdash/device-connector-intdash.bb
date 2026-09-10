@@ -56,6 +56,7 @@ FILES:device-connector-plugins-gps = " \
 "
 FILES:device-connector-plugins-intdash = " \
     ${libdir}/${DC_TARGET_SYS}/dc-plugins/libdc_intdash.so \
+    ${sysconfdir}/dc_conf/dump.yml \
     ${sysconfdir}/dc_conf/iscp_rest_downstream.yml \
     ${sysconfdir}/dc_conf/iscp_rest_upstream.yml \
     ${sysconfdir}/dc_conf/repeat_process_json.yml \

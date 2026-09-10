@@ -79,9 +79,14 @@ function commit_config() {
   echo "change api user 'user' password"
   sed -i "s@^user:.*@user:${API_USER_PASS_USER}@g" /etc/core/htpasswd
 
-  usermod -p ${USER_PASS_ROOT} root
-  usermod -p ${USER_PASS_ADMIN} admin
-  usermod -p ${USER_PASS_MAINT} maint
+  # Directly edit /etc/shadow instead of using usermod (which may not exist in read-only-rootfs)
+  # Changes are persisted in /data/overlay/etc/shadow via overlayfs
+  echo "change login password for root"
+  sed -i "s|^root:[^:]*:|root:${USER_PASS_ROOT}:|" /etc/shadow
+  echo "change login password for admin"
+  sed -i "s|^admin:[^:]*:|admin:${USER_PASS_ADMIN}:|" /etc/shadow
+  echo "change login password for maint"
+  sed -i "s|^maint:[^:]*:|maint:${USER_PASS_MAINT}:|" /etc/shadow
 
   touch ${DATA_INITIALIZED_FILE}
   rm -f ${TS2_CONFIG}

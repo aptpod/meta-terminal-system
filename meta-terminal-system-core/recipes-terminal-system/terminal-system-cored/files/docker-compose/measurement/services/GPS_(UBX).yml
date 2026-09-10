@@ -24,6 +24,10 @@ environment:
     DC_UBX_SRC_CONF_HNR_PVT_RATE: 1
     DC_UBX_SRC_CONF_NAV_STATUS_RATE: 1
     DC_UBX_SRC_CONF_NAV_PVT_RATE: 1
+    DC_UBX_SRC_CONF_ESF_ALG_CONFIG_MODE: ${DC_IMU_AUTO_CALIBRATION}
+    DC_UBX_SRC_CONF_ESF_ALG_YAW: ${DC_IMU_MOUNT_YAW}
+    DC_UBX_SRC_CONF_ESF_ALG_PITCH: ${DC_IMU_MOUNT_PITCH}
+    DC_UBX_SRC_CONF_ESF_ALG_ROLL: ${DC_IMU_MOUNT_ROLL}
     DC_UBX_ISCPV2_FILTER_CONF_HNR_PVT_FILTER_OUT_BY_GPS_FIX: '[0, 5]'
     DC_UBX_ISCPV2_FILTER_CONF_NAV_PVT_FILTER_OUT_BY_GPS_FIX: '[0, 5]'
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
@@ -43,6 +47,13 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: '<ubx_msg>'
+      options: ['<ubx_msg>']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名（UBXメッセージ名）
     - key: DC_DEVICE_PATH
       default: '@DEFAULT_GPS_DEVICE_PATH@'
       options_script: "/etc/core/docker-compose/measurement/services/GPS/device_path.sh"
@@ -58,3 +69,34 @@ substitution_variables:
           name: HNR Message Rate
           description: UBX-HNRメッセージの送信間隔（1-20の値を指定）
           unit: Hz
+    - key: DC_IMU_AUTO_CALIBRATION
+      default: 'true'
+      options: ['true', 'false']
+      display_strings_i18n:
+        - locale: und
+          name: IMU Auto Calibration
+          description: IMU取り付け位置の自動キャリブレーションの有効/無効。無効にした場合、IMU Mount Yaw / Pitch / Roll で指定した取り付け角度が使用されます。
+    - key: DC_IMU_MOUNT_YAW
+      default: 0
+      validation: '^[0-9]+(\.[0-9]+)?$'
+      display_strings_i18n:
+        - locale: und
+          name: IMU Mount Yaw
+          description: IMUの取り付けヨー角。車両前方を基準とした水平面内の回転角（0～360）
+          unit: deg
+    - key: DC_IMU_MOUNT_PITCH
+      default: 0
+      validation: '^-?[0-9]+(\.[0-9]+)?$'
+      display_strings_i18n:
+        - locale: und
+          name: IMU Mount Pitch
+          description: IMUの取り付けピッチ角。車両前後方向の傾き（-90～90）
+          unit: deg
+    - key: DC_IMU_MOUNT_ROLL
+      default: 0
+      validation: '^-?[0-9]+(\.[0-9]+)?$'
+      display_strings_i18n:
+        - locale: und
+          name: IMU Mount Roll
+          description: IMUの取り付けロール角。車両左右方向の傾き（-180～180）
+          unit: deg

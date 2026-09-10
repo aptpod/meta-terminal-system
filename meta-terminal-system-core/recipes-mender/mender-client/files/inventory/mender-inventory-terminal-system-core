@@ -25,6 +25,7 @@ declare -A API_LIST=(
     ["time_sync.sources"]="/time_sync/sources"
     ["diagnostics"]="/diagnostics?filters=%7B%22category%22%3A%5B%22alert%22%5D%2C%22resolved%22%3A%5Bfalse%5D%7D"
     ["device_connector_services"]="/device_connector_services"
+    ["external_storages"]="/external_storages"
     ["docker.images"]="/docker/images"
     ["docker.containers"]="/docker/containers"
     ["network.route"]="/network/route/${NETWORK_ROUTE_IP}"

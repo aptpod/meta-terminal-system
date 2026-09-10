@@ -55,8 +55,10 @@ trap cleanup INT TERM EXIT
 
 INSTALL_MOUNT_POINT=$(mount | grep "$INSTALL_PART" | awk '{print $3}')
 if [ -z "$INSTALL_MOUNT_POINT" ]; then
-  TEMP_MOUNT_DIR_CANDIDATE=$(mktemp -d /mnt-XXXXXX)
-  mount "$INSTALL_PART" "$TEMP_MOUNT_DIR_CANDIDATE"
+  # Use /tmp for temporary directory (read-only-rootfs compatible)
+  TEMP_MOUNT_DIR_CANDIDATE=$(mktemp -d /tmp/mnt-XXXXXX)
+  # Mount with ro,noload to prevent ext4 metadata updates that would change partition checksum
+  mount -o ro,noload "$INSTALL_PART" "$TEMP_MOUNT_DIR_CANDIDATE"
   TEMP_MOUNT_DIR="$TEMP_MOUNT_DIR_CANDIDATE"
   INSTALL_MOUNT_POINT="$TEMP_MOUNT_DIR_CANDIDATE"
 fi

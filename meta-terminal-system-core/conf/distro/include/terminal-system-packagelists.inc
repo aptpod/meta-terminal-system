@@ -57,6 +57,7 @@ TERMINAL_SYSTEM_NETWORK = "\
     networkmanager \
     hostapd \
     bind-utils \
+    cellular-module-init \
 "
 
 TERMINAL_SYSTEM_CONNECTOR = "\
@@ -79,8 +80,8 @@ TERMINAL_SYSTEM_AWS = "\
 TERMINAL_SYSTEM_MENDER = "\
     mender-connect \
     mender-configure \
+    ${@bb.utils.contains('TS_FEATURES', 'mender-binary-delta', 'mender-binary-delta', '', d)} \
     mender-update-module-custom \
     mender-terminal-system-state-scripts \
-    mender-shutdown-update \
     mender-standalone-update \
 "
