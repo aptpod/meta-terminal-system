@@ -1,0 +1,7 @@
+id: intdash_server_license_limit_measurement_rejected
+type: log
+diagnostic_category: alert
+diagnostic_description: "intdash Server %{capture1} license limit exceeded, measurement cannot be started, please contact your intdash administrator."
+log_id: system-intdash-edge-agent2-1
+log_regex: 'meas server rejected by intdash Server license limit:.*?kind=([a-z]+)'
+log_expiration: 600

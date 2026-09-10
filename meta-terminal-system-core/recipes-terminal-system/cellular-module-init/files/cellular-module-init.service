@@ -1,0 +1,21 @@
+[Unit]
+Description=Cellular module runtime initialization
+After=ModemManager.service
+Wants=ModemManager.service
+After=dev-ttyGPS.device
+Before=gpsd.service
+# Skip when no modem init script is present; otherwise dispatch.sh
+# would block gpsd by polling for /dev/ttyGPS that never appears.
+ConditionPathExistsGlob=/etc/cellular-module-init/*/init.sh
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# dispatch.sh waits for /dev/ttyGPS appearance, then for ModemManager
+# modem probe completion (up to 90s each). With sleep + mmcli exec
+# overhead the real wait can reach ~180s, exceeding systemd's 90s default.
+TimeoutStartSec=240
+ExecStart=/usr/bin/cellular-module-init-dispatch.sh
+
+[Install]
+WantedBy=multi-user.target

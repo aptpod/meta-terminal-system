@@ -44,6 +44,13 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: 'ad7994'
+      options: ['ad7994']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名
     - key: DC_SAMPLING_FREQUENCY
       default: 1000
       validation: '^([1-9][0-9]{0,2}|1000)$'

@@ -1,0 +1,7 @@
+id: intdash_server_license_limit_realtime_nacked
+type: log
+diagnostic_category: alert
+diagnostic_description: "intdash Server%{capture1} license limit exceeded, realtime data is being rejected, please contact your intdash administrator."
+log_id: system-intdash-edge-agent2-1
+log_regex: 'summary of ACK errors .*?result_code [A-Za-z]+: License limit exceeded(?::( [a-z]+))?'
+log_expiration: 120

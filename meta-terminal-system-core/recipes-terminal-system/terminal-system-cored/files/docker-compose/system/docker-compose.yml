@@ -14,7 +14,7 @@ services:
       - HTTP_PROXY=${HTTP_PROXY}
       - HTTPS_PROXY=${HTTPS_PROXY}
       - NO_PROXY=${NO_PROXY}
-    command: intdash-agentd serve -l info --port 50051 --grpc-reflection --info-duration-to-ignore 5
+    command: intdash-agentd serve -l info --grpc-reflection --info-duration-to-ignore 5
     stop_grace_period: 60s
     volumes:
       - /var/run/core/intdash:/var/run/intdash

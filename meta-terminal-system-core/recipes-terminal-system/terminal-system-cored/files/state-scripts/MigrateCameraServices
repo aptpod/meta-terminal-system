@@ -1,0 +1,83 @@
+#!/bin/bash
+
+# Migrate camera device connector services to unified services.
+# Since version 1.3.0, camera services have been unified.
+# This migration is required when updating from versions prior to 1.3.0.
+
+FRAGMENT_DIR="/var/lib/core/docker-compose/measurement/device_connector"
+
+log() {
+    echo "[MigrateCameraServices] $1"
+}
+
+check_os_version() {
+    os_version="$(cat /etc/os-release | grep VERSION_ID | sed -e 's/^VERSION_ID=\(.*\)$/\1/')"
+
+    # Only migrate from versions prior to 1.3.0 (1.0.x, 1.1.x, 1.2.x)
+    if ! [[ $os_version =~ ^1\.[0-2]\. ]]; then
+        exit 0
+    fi
+}
+
+# Get new service_id and DC_OUTPUT_DATA_TYPE for a given old service_id
+# Returns: "new_service_id|output_data_type" or empty string if not a migration target
+get_migration_info() {
+    local old_service_id="$1"
+    case "$old_service_id" in
+        "H.264 for EDGEPLANT USB Camera")
+            echo "EDGEPLANT USB Camera|H.264 Frame (from JPEG)"
+            ;;
+        "H.264 NAL Unit for EDGEPLANT USB Camera")
+            echo "EDGEPLANT USB Camera|H.264 NAL Unit (from JPEG)"
+            ;;
+        "MJPEG for EDGEPLANT USB Camera")
+            echo "EDGEPLANT USB Camera|JPEG (Pass-Through)"
+            ;;
+        "MJPEG for EDGEPLANT USB Camera (v4l2-src)")
+            echo "EDGEPLANT USB Camera|JPEG (Pass-Through)"
+            ;;
+        "H.264 for EDGEPLANT USB Camera (YUY2)")
+            echo "EDGEPLANT USB Camera|H.264 Frame (from YUY2)"
+            ;;
+        "H.264 for EDGEPLANT USB Camera x4")
+            echo "EDGEPLANT USB Camera x4|H.264 Frame (from JPEG)"
+            ;;
+        "H.264 for Raspberry Pi Camera")
+            echo "Raspberry Pi Camera|H.264 Frame (from YUY2)"
+            ;;
+        *)
+            echo ""
+            ;;
+    esac
+}
+
+check_os_version
+
+# Process each fragment.json file
+for fragment_file in "$FRAGMENT_DIR"/*.fragment.json; do
+    [ -e "$fragment_file" ] || continue
+
+    service_id=$(jq -r '.service_id // empty' "$fragment_file" 2>/dev/null)
+    [ -z "$service_id" ] && continue
+
+    migration_info=$(get_migration_info "$service_id")
+    [ -z "$migration_info" ] && continue
+
+    new_service_id=$(echo "$migration_info" | cut -d'|' -f1)
+    output_data_type=$(echo "$migration_info" | cut -d'|' -f2)
+
+    # Get fragment id from filename
+    fragment_id=$(basename "$fragment_file" .fragment.json)
+
+    # Update service_id and add DC_OUTPUT_DATA_TYPE to service_substitutions
+    jq --arg new_id "$new_service_id" \
+       --arg output_type "DC_OUTPUT_DATA_TYPE=$output_data_type" \
+       '.service_id = $new_id | .service_substitutions = (.service_substitutions + [$output_type])' \
+       "$fragment_file" > "${fragment_file}.tmp"
+
+    mv "${fragment_file}.tmp" "$fragment_file"
+
+    log "Migrated: id=$fragment_id, $service_id -> $new_service_id, DC_OUTPUT_DATA_TYPE=$output_data_type"
+done
+
+exit 0

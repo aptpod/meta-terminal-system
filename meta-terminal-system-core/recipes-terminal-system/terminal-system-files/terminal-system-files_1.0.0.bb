@@ -6,8 +6,10 @@ inherit systemd
 
 SRC_URI = " \
     file://20-usb.rules \
+    file://71-can-persistent-naming.rules \
     file://99-terminal-display.rules \
     file://terminal-display.conf \
+    file://can-persistent-name \
     file://usb-automount.sh \
     file://usb-automount@.service \
 "
@@ -23,12 +25,14 @@ FILES:${PN} = "${sysconfdir} ${bindir} ${systemd_system_unitdir}"
 do_install() {
     install -d ${D}${sysconfdir}/udev/rules.d
     install -m 0644 ${WORKDIR}/20-usb.rules ${D}${sysconfdir}/udev/rules.d
+    install -m 0644 ${WORKDIR}/71-can-persistent-naming.rules ${D}${sysconfdir}/udev/rules.d
     install -m 0644 ${WORKDIR}/99-terminal-display.rules ${D}${sysconfdir}/udev/rules.d
 
     install -d ${D}${sysconfdir}/terminal-display
     install -m 0644 ${WORKDIR}/terminal-display.conf ${D}${sysconfdir}/terminal-display/terminal-display.conf
 
     install -d ${D}${bindir}
+    install -m 0755 ${WORKDIR}/can-persistent-name ${D}${bindir}/can-persistent-name
     install -m 0755 ${WORKDIR}/usb-automount.sh ${D}${bindir}/usb-automount.sh
 
     install -d ${D}${systemd_system_unitdir}

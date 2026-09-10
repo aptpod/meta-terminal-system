@@ -15,9 +15,11 @@ SRC_URI = "file://${TS_RESOURCES_DIR}/cored.${TS_CORED_VERSION}.linux-${TARGET_G
            file://diagnostic-monitors/apt_usbtrx_fw_rx_dropped.yml \
            file://diagnostic-monitors/apt_usbtrx_ringbuffer_is_full.yml \
            file://diagnostic-monitors/diskusage_data.yml \
-           file://diagnostic-monitors/diskusage_root.yml \
            file://diagnostic-monitors/docker_container_error.yml \
            file://diagnostic-monitors/high_cpu_usage.yml \
+           file://diagnostic-monitors/intdash_server_license_limit_measurement_rejected.yml \
+           file://diagnostic-monitors/intdash_server_license_limit_realtime_nacked.yml \
+           file://diagnostic-monitors/intdash_server_license_limit_upload_blocked.yml \
            file://diagnostic-monitors/intdash_server_request_timeout.yml \
            file://diagnostic-monitors/rtc_battery_empty.yml \
            file://diagnostic-monitors/unexpected_power_interruption.yml \
@@ -26,13 +28,28 @@ SRC_URI = "file://${TS_RESOURCES_DIR}/cored.${TS_CORED_VERSION}.linux-${TARGET_G
            file://docker-compose/measurement/docker-compose.yml \
            file://docker-compose/measurement/services/ANALOG-USB_Interface.yml \
            file://docker-compose/measurement/services/Audio.yml \
+           file://docker-compose/measurement/services/Audio/audio_bitrate.sh \
+           file://docker-compose/measurement/services/Audio/audio_bitrate_type.sh \
+           file://docker-compose/measurement/services/Audio/audio_format.sh \
            file://docker-compose/measurement/services/Audio/audio_jack_element.sh \
            file://docker-compose/measurement/services/Audio/audio_jack_iface.sh \
+           file://docker-compose/measurement/services/Audio/audio_rate.sh \
+           file://docker-compose/measurement/services/Audio/data_name.sh \
            file://docker-compose/measurement/services/Audio/device_path.sh \
            file://docker-compose/measurement/services/Audio/mixer_args.sh \
            file://docker-compose/measurement/services/Camera/device_path.sh \
+           file://docker-compose/measurement/services/Camera/bitrate_bps.sh \
+           file://docker-compose/measurement/services/Camera/bitrate_kbps.sh \
+           file://docker-compose/measurement/services/Camera/data_name.sh \
            file://docker-compose/measurement/services/Camera/device_path_usb_camera.sh \
            file://docker-compose/measurement/services/Camera/device_path_edgeplant_usb_camera.sh \
+           file://docker-compose/measurement/services/Camera/device_path_edgeplant_usb_3.0_camera_ip67.sh \
+           file://docker-compose/measurement/services/Camera/camera_common.sh \
+           file://docker-compose/measurement/services/Camera/fps_edgeplant_usb_camera.sh \
+           file://docker-compose/measurement/services/Camera/fps_edgeplant_usb_3.0_camera_ip67.sh \
+           file://docker-compose/measurement/services/Camera/height_edgeplant_usb_camera.sh \
+           file://docker-compose/measurement/services/Camera/videoflip.sh \
+           file://docker-compose/measurement/services/Camera/width_edgeplant_usb_camera.sh \
            file://docker-compose/measurement/services/CAN-USB_Interface_(Downstream).yml \
            file://docker-compose/measurement/services/CAN-USB_Interface_(Upstream).yml \
            file://docker-compose/measurement/services/CAN-USB_Interface.yml \
@@ -47,21 +64,29 @@ SRC_URI = "file://${TS_RESOURCES_DIR}/cored.${TS_CORED_VERSION}.linux-${TARGET_G
            file://docker-compose/measurement/services/GPS/device_path.sh \
            file://docker-compose/measurement/services/GPS_(NMEA)_(System-Configured).yml \
            file://docker-compose/measurement/services/GPS_(UBX)_(System-Configured).yml \
-           file://docker-compose/measurement/services/MJPEG_for_EDGEPLANT_USB_Camera_(v4l2-src).yml \
-           file://docker-compose/measurement/services/MJPEG_for_EDGEPLANT_USB_Camera.yml \
            file://docker-compose/measurement/services/SocketCAN.yml \
            file://docker-compose/measurement/services/SocketCAN_(Upstream).yml \
            file://docker-compose/measurement/services/SocketCAN_(Downstream).yml \
            file://docker-compose/measurement/services/SocketCAN/interface.sh \
            file://band-preset.yml \
+           file://band-preset/em7430.yml \
+           file://band-preset/em7431.yml \
+           file://band-preset/em05gfa.yml \
+           file://band-preset/rm520n-gl.yml \
            file://terminal-system-cored.service \
+           ${TS_SRC_URI_MENDER_OPERATION_ARTIFACTS} \
           "
 
 SRC_URI:append:mender-image = " \
-    file://state-scripts/MigrateAPIUsersPasswd \
     file://state-scripts/SetCommitDeviceConnectorsToTrue \
-    file://state-scripts/MigrateDCSettingsH264iSCPv2CompatFormat \
     file://state-scripts/SetTimeSyncDefault \
+    file://state-scripts/MigrateHomeOverlay \
+    file://state-scripts/MigrateProxyConfigToOverlayfs \
+    file://state-scripts/BackupDeviceConnectorFragments \
+    file://state-scripts/RestoreDeviceConnectorFragments \
+    file://state-scripts/CleanupDeviceConnectorFragmentsBackup \
+    file://state-scripts/MigrateCameraServices \
+    file://state-scripts/MigrateStreamerLogFile \
     file://state-scripts/MigrateDhcpcdState \
 "
 
@@ -75,6 +100,7 @@ inherit systemd
 FILES:${PN} = "/usr/bin/cored \
                ${sysconfdir}/core \
                ${systemd_system_unitdir}/terminal-system-cored.service \
+               ${datadir}/mender-artifacts \
               "
 INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
@@ -98,14 +124,20 @@ do_compile() {
     :
 }
 do_compile:append:mender-image() {
-    # ArtifactInstall_Enter
-    cp ${WORKDIR}/state-scripts/MigrateDCSettingsH264iSCPv2CompatFormat ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Enter_30_MigrateDCSettingsH264iSCPv2CompatFormat
-
     # ArtifactInstall_Leave
-    cp ${WORKDIR}/state-scripts/MigrateAPIUsersPasswd ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateAPIUsersPasswd
+    cp ${WORKDIR}/state-scripts/BackupDeviceConnectorFragments ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_20_BackupDeviceConnectorFragments
     cp ${WORKDIR}/state-scripts/SetCommitDeviceConnectorsToTrue ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_SetCommitDeviceConnectorsToTrue
     cp ${WORKDIR}/state-scripts/SetTimeSyncDefault ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_SetTimeSyncDefault
+    cp ${WORKDIR}/state-scripts/MigrateHomeOverlay ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateHomeOverlay
+    sed -i -e 's:@ROOT_HOME@:${ROOT_HOME}:g' ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateHomeOverlay
+    cp ${WORKDIR}/state-scripts/MigrateProxyConfigToOverlayfs ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateProxyConfigToOverlayfs
+    cp ${WORKDIR}/state-scripts/MigrateCameraServices ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateCameraServices
+    cp ${WORKDIR}/state-scripts/MigrateStreamerLogFile ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateStreamerLogFile
     cp ${WORKDIR}/state-scripts/MigrateDhcpcdState ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateDhcpcdState
+    # ArtifactRollback_Enter
+    cp ${WORKDIR}/state-scripts/RestoreDeviceConnectorFragments ${MENDER_STATE_SCRIPTS_DIR}/ArtifactRollback_Enter_20_RestoreDeviceConnectorFragments
+    # ArtifactCommit_Enter
+    cp ${WORKDIR}/state-scripts/CleanupDeviceConnectorFragmentsBackup ${MENDER_STATE_SCRIPTS_DIR}/ArtifactCommit_Enter_20_CleanupDeviceConnectorFragmentsBackup
 }
 
 do_install[network] = "1"
@@ -119,6 +151,8 @@ do_install() {
     install -m 0644 ${WORKDIR}/terminal-system-cored.service ${D}${systemd_system_unitdir}
     sed -i \
         -e 's:@ROOT_HOME@:${ROOT_HOME}:' \
+        -e 's:@TS_INTDASH_UID@:${TS_INTDASH_UID}:g' \
+        -e 's:@TS_INTDASH_GID@:${TS_INTDASH_GID}:g' \
         ${D}${systemd_system_unitdir}/terminal-system-cored.service
 
     # Setup /etc/core files
@@ -152,7 +186,9 @@ HTPASSWD_FILE
             > ${WORKDIR}/default/intdash/agent.yaml.tmp
         mv ${WORKDIR}/default/intdash/agent.yaml.tmp ${WORKDIR}/default/intdash/agent.yaml
     fi
-    install -m 0666 ${WORKDIR}/default/intdash/agent.yaml ${D}${sysconfdir}/core/default/intdash/agent.yaml
+    # agent.yaml holds the intdash client secret. It is owned by the intdash user in the
+    # intdash-edge-agent2 container, which reads and writes it over the bind mount.
+    install -m 0600 -o ${TS_INTDASH_UID} -g ${TS_INTDASH_GID} ${WORKDIR}/default/intdash/agent.yaml ${D}${sysconfdir}/core/default/intdash/agent.yaml
     install -m 0644 ${WORKDIR}/default/gps.json ${D}${sysconfdir}/core/default/gps.json
     install -m 0644 ${WORKDIR}/default/time_sync.json ${D}${sysconfdir}/core/default/time_sync.json
 
@@ -226,6 +262,13 @@ ENV_FILE
         rm -f ${D}${sysconfdir}/core/docker-compose/measurement/services/GPS\ \(NMEA\)\ \(System-Configured\).yml
         rm -f ${D}${sysconfdir}/core/docker-compose/measurement/services/GPS\ \(UBX\)\ \(System-Configured\).yml
     fi
+
+    # Setup mender-artifacts
+    install -m 755 -d ${D}${datadir}/mender-artifacts
+    for src_uri in ${TS_SRC_URI_MENDER_OPERATION_ARTIFACTS}; do
+        artifact="$(basename ${src_uri})"
+        install -m 0644 ${S}/${artifact} ${D}${datadir}/mender-artifacts/${artifact}
+    done
 }
 
 SYSTEMD_SERVICE:${PN} = " terminal-system-cored.service "

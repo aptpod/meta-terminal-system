@@ -1,0 +1,37 @@
+From 61915d6a1011cf5d275f9b75f6e69f976672f9da Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Tue, 3 Feb 2026 13:53:02 +0900
+Subject: [PATCH] feat: add UPDATE_ONLY option to inventory script
+
+Add UPDATE_ONLY environment variable to mender-inventory-mender-configure.
+When set to "true", the script acquires lock, runs update scripts, and
+exits without sending inventory to Mender server.
+
+This is used by advanced_settings.py GET operation to update
+device-config.json with proper locking.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ src/mender-inventory-mender-configure | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/src/mender-inventory-mender-configure b/src/mender-inventory-mender-configure
+index e417a8c..1251b52 100755
+--- a/src/mender-inventory-mender-configure
++++ b/src/mender-inventory-mender-configure
+@@ -95,6 +95,12 @@ update_scripts() {
+ acquire_lock
+ update_scripts
+ 
++# If UPDATE_ONLY is set, exit without sending inventory
++UPDATE_ONLY=${UPDATE_ONLY:-false}
++if [ "$UPDATE_ONLY" = "true" ]; then
++    exit 0
++fi
++
+ # Include the JWT token in the checksum to report again the
+ # configuration to the server in case of new authorization after
+ # device decommissioning or connection to a different Mender server
+-- 
+2.43.0
+

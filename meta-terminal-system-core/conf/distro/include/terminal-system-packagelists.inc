@@ -58,6 +58,7 @@ TERMINAL_SYSTEM_NETWORK = "\
     hostapd \
     bind-utils \
     kernel-modules-rtl8821au \
+    cellular-module-init \
 "
 
 TERMINAL_SYSTEM_CONNECTOR = "\
@@ -80,6 +81,7 @@ TERMINAL_SYSTEM_AWS = "\
 TERMINAL_SYSTEM_MENDER = "\
     mender-connect \
     mender-configure \
+    ${@bb.utils.contains('TS_FEATURES', 'mender-binary-delta', 'mender-binary-delta', '', d)} \
     mender-update-module-custom \
     mender-terminal-system-state-scripts \
     mender-standalone-update \

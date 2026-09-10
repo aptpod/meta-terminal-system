@@ -1,0 +1,5 @@
+# Assign persistent names to USB-connected SocketCAN interfaces.
+# Requires a USB serial number. Devices without a serial keep their kernel name.
+# On-chip CAN (platform devices) are not affected.
+SUBSYSTEM=="net", ACTION=="add", KERNEL=="can*", SUBSYSTEMS=="usb", \
+    PROGRAM="/usr/bin/can-persistent-name %k", NAME="%c"

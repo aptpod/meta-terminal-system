@@ -1,0 +1,10 @@
+ACTION!="add", GOTO="rm520n_end"
+
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="2c7c", ATTRS{idProduct}=="0801", GOTO="rm520n_gps"
+
+GOTO="rm520n_end"
+
+LABEL="rm520n_gps"
+SUBSYSTEM=="tty", ATTRS{bInterfaceNumber}=="01", SYMLINK+="ttyGPS", TAG+="systemd", ENV{ID_CELLULAR_MODULE}="rm520n"
+
+LABEL="rm520n_end"

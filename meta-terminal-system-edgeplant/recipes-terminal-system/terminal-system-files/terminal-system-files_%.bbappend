@@ -8,8 +8,6 @@ SRC_URI:append:edgeplant-r1 = " \
     file://sd-initialize.service \
 "
 
-inherit mender-state-scripts
-
 do_install:append:edgeplant-r1() {
     install -d ${D}${sysconfdir}/udev/rules.d
     install -m 0644 ${WORKDIR}/69-persistent-storage-internal.rules ${D}${sysconfdir}/udev/rules.d

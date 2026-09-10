@@ -1,0 +1,53 @@
+From 9656e29fe60100bd2a28d2b6a6983f9fdbc749a2 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Thu, 11 Jun 2026 16:29:10 +0900
+Subject: [PATCH] feat: accept comma-separated NO_PROXY
+
+Terminal System sets NO_PROXY comma-separated via the systemd
+DefaultEnvironment line, where spaces separate assignments and cannot
+appear inside a value. mender 5.1.0 (ME-586) parses NO_PROXY as
+space-separated and rejects commas at startup. Normalize commas to
+spaces before splitting so both forms work, and drop the comma
+validation.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ src/client_shared/conf/conf.cpp | 6 ------
+ src/common/http/http.cpp        | 4 +++-
+ 2 files changed, 3 insertions(+), 7 deletions(-)
+
+diff --git a/src/client_shared/conf/conf.cpp b/src/client_shared/conf/conf.cpp
+index 12b0833..e8e4c4f 100644
+--- a/src/client_shared/conf/conf.cpp
++++ b/src/client_shared/conf/conf.cpp
+@@ -289,12 +289,6 @@ expected::ExpectedSize MenderConfig::ProcessCmdlineArgs(
+ 		return expected::unexpected(proxy.error());
+ 	}
+ 
+-	if (http_client_config_.no_proxy.find(',') != string::npos) {
+-		return expected::unexpected(MakeError(
+-			ConfigErrorCode::InvalidOptionsError,
+-			"Unsupported syntax for NO_PROXY environment variable. Use space-separated values instead of comma-separated."));
+-	}
+-
+ 	return opts_iter.GetPos();
+ }
+ 
+diff --git a/src/common/http/http.cpp b/src/common/http/http.cpp
+index 089957a..d4f4bbd 100644
+--- a/src/common/http/http.cpp
++++ b/src/common/http/http.cpp
+@@ -530,7 +530,9 @@ expected::ExpectedString GetNoProxyStringFromEnvironment() {
+ // The proxy variables aren't standardized, but this page was useful for the common patterns:
+ // https://superuser.com/questions/944958/are-http-proxy-https-proxy-and-no-proxy-environment-variables-standard
+ bool HostNameMatchesNoProxy(const string &host, const string &no_proxy) {
+-	auto entries = common::SplitString(no_proxy, " ");
++	string no_proxy_spaces = no_proxy;
++	std::replace(no_proxy_spaces.begin(), no_proxy_spaces.end(), ',', ' ');
++	auto entries = common::SplitString(no_proxy_spaces, " ");
+ 	for (string &entry : entries) {
+ 		if (entry[0] == '.') {
+ 			// Wildcard.
+-- 
+2.43.0
+

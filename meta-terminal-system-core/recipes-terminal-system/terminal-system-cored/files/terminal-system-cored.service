@@ -13,6 +13,8 @@ RuntimeDirectory=core
 StateDirectory=core
 ConfigurationDirectory=core
 Environment=HOME=@ROOT_HOME@ CORE_RUN_DIR=/run/core CORE_STATE_DIR=/var/lib/core CORE_CONF_DIR=/etc/core
+# The intdash user in the intdash-edge-agent2 container, which reads these 0600 keys over the bind mount.
+Environment=CORE_CLIENT_CREDENTIAL_OWNER=@TS_INTDASH_UID@:@TS_INTDASH_GID@
 
 # Validate constant variables
 ExecStartPre=/bin/sh -c '/usr/bin/test $(/bin/grep root /etc/passwd | /usr/bin/cut -d ":" -f6) = "@ROOT_HOME@" || { /bin/echo "Unexpected home directory" 1>&2; exit 1; }'
@@ -24,9 +26,12 @@ ExecStartPre=/bin/sh -c '/usr/bin/test ${CONFIGURATION_DIRECTORY} = ${CORE_CONF_
 ExecStartPre=/bin/sh -c "/usr/bin/test -f ${CORE_STATE_DIR}/.initialized || { find ${CORE_STATE_DIR} -maxdepth 1 -mindepth 1 -exec rm -rf {} \; && find ${CORE_CONF_DIR}/default -maxdepth 1 -mindepth 1 -exec cp -a {} ${CORE_STATE_DIR}/ \; && touch ${CORE_STATE_DIR}/.initialized; }"
 
 # Start service
-ExecStartPre=/usr/bin/install -d -m 0777 ${CORE_RUN_DIR}/intdash
-ExecStartPre=/usr/bin/install -d -m 0777 ${CORE_STATE_DIR}/intdash
-ExecStart=/usr/bin/cored serve --static-server-maps /third_party_notices/inherent:/usr/share/common-licenses --static-server-maps /third_party_notices/extra:/usr/share/licenses
+# These are bind-mounted into the intdash-edge-agent2 container, so mode/owner follow its
+# contract (postinst / Dockerfile): the runtime dir is 2770 so that files created here -
+# the UDS, the device-connector FIFOs - inherit the intdash group, and the state dir is 0755.
+ExecStartPre=/usr/bin/install -d -m 2770 -o @TS_INTDASH_UID@ -g @TS_INTDASH_GID@ ${CORE_RUN_DIR}/intdash
+ExecStartPre=/usr/bin/install -d -m 0755 -o @TS_INTDASH_UID@ -g @TS_INTDASH_GID@ ${CORE_STATE_DIR}/intdash
+ExecStart=/usr/bin/cored serve --static-server-maps /third_party_notices/inherent:/usr/share/common-licenses --static-server-maps /third_party_notices/extra:/usr/share/licenses --static-server-maps /mender_artifacts:/usr/share/mender-artifacts
 KillMode=mixed
 TimeoutStopSec=45
 

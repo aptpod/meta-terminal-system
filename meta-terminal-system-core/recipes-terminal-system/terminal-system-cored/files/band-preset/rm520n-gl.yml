@@ -1,0 +1,72 @@
+RM520N-GL:
+  - name: "YE0001BA"
+    bands:
+      umts: ["B1", "B5", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0001BA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: []
+
+  - name: "YE0007AA"
+    bands:
+      umts: ["B1", "B5", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0007AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: []
+
+  - name: "YE0028AA"
+    bands:
+      umts: ["B1", "B5", "B8"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0028AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YE0037AA"
+    bands:
+      umts: ["B1", "B5", "B8"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0037AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YE0003AA"
+    bands:
+      umts: ["B1", "B5", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0003AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YE0027AA"
+    bands:
+      umts: ["B1", "B5", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0027AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28"]
+      lte_tdd: []

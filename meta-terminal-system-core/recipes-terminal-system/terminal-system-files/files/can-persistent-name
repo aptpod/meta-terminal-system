@@ -1,0 +1,45 @@
+#!/bin/sh
+# Generate a persistent CAN interface name for USB CAN adapters.
+#
+# Naming: can<serial_last4>i<if>[d<dev_port>]
+# Requires a USB serial number. Devices without a serial keep their kernel name.
+#
+# Usage: can-persistent-name <kernel-interface-name>
+# Called by udev PROGRAM directive, outputs the new name to stdout.
+
+IFACE="$1"
+SYSDIR="/sys/class/net/$IFACE"
+
+[ -d "$SYSDIR" ] || { echo "$IFACE"; exit 0; }
+
+# Resolve sysfs paths: net device -> USB interface (device/) -> USB device (parent)
+USB_IF=$(readlink -f "$SYSDIR/device")
+USB_DEV=${USB_IF%/*}
+
+# Verify this is a USB device
+[ -f "$USB_DEV/busnum" ] || { echo "$IFACE"; exit 0; }
+
+# Require USB serial number for persistent naming
+SERIAL=$(cat "$USB_DEV/serial" 2>/dev/null)
+[ -n "$SERIAL" ] || { echo "$IFACE"; exit 0; }
+
+IFNUM=$(cat "$USB_IF/bInterfaceNumber" 2>/dev/null)
+IFNUM=${IFNUM#0}
+IFNUM=${IFNUM:-0}
+
+# Append dev_port suffix for devices with multiple CAN channels per USB interface
+DEVPORT=$(cat "$SYSDIR/dev_port" 2>/dev/null)
+if [ -n "$DEVPORT" ] && [ "$DEVPORT" != "0" ]; then
+    IFNUM="${IFNUM}d${DEVPORT}"
+fi
+
+# Strip characters invalid in interface names (dev_valid_name: slash, whitespace)
+SHORT=$(printf '%s' "$SERIAL" | tr -d '/[:space:]' | tail -c 4)
+[ -n "$SHORT" ] || { echo "$IFACE"; exit 0; }
+
+NAME="can${SHORT}i${IFNUM}"
+if [ ${#NAME} -le 15 ]; then
+    echo "$NAME"
+else
+    echo "$IFACE"
+fi

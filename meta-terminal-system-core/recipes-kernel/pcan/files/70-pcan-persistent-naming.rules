@@ -1,0 +1,6 @@
+# Assign persistent names to PCAN SocketCAN interfaces.
+# The proprietary pcan driver creates virtual network devices, so standard
+# USB udev matching (SUBSYSTEMS=="usb") does not work.
+# DEVPATH filter ensures the naming script only runs for virtual CAN interfaces.
+SUBSYSTEM=="net", ACTION=="add", KERNEL=="can*", DEVPATH=="/devices/virtual/net/*", \
+    PROGRAM="/usr/bin/can-persistent-name-pcan %k", NAME="%c"

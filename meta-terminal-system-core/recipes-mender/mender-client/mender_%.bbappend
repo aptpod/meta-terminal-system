@@ -8,15 +8,23 @@ SRC_URI:append = " \
     file://inventory/mender-inventory-device-inventory \
     file://cpu-weight.conf \
     file://0001-feat-Allow-forced-commit-without-reboot-during-stand.patch \
-    file://0001-feat-change-no_proxy-delimiter-to-comma.patch \
+    file://0001-feat-accept-comma-separated-no_proxy.patch \
     file://0003-fix-Add-connect-handshake-read-header-timeouts-to-pr.patch \
 "
 
-FILES:${PN} += " \
+# Patch mender-resize-data-part.sh to use sfdisk instead of parted.
+# With overlayfs-etc enabled, /data is already mounted before mender-grow-data.service runs.
+# parted fails on mounted partitions with "Warning: Partition is being used".
+# Note: parted dependency is kept for partprobe command.
+SRC_URI:append:mender-growfs-data:mender-systemd = " \
+    file://0002-fix-use-sfdisk-instead-of-parted-for-mounted-parti.patch;patchdir=${WORKDIR} \
+"
+
+FILES:mender-update += " \
     ${systemd_system_unitdir}/${MENDER_CLIENT}.service.d \
 "
 
-RDEPENDS:${PN} += " \
+RDEPENDS:mender-update += " \
     bash \
     curl \
     jq \

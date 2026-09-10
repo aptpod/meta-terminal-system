@@ -1,0 +1,108 @@
+QUECTEL Mobile Broadband Module:
+  - name: "YB0010AA"
+    bands:
+      umts: ["B1", "B5", "B8"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YB0010AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YE0010AA"
+    bands:
+      umts: ["B1", "B5", "B8"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0010AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YE0006AA"
+    bands:
+      umts: ["B1", "B5", "B6", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0006AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: []
+
+  - name: "YECT003W1A"
+    bands:
+      umts: ["B1", "B5", "B6", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B18", "B19", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YECT003W1A (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B18", "B19", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YECT009W1AM"
+    bands:
+      umts: ["B1", "B5", "B6", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B18", "B19", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YECT009W1AM (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B18", "B19", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YE0013CA"
+    bands:
+      umts: ["B1", "B5", "B6", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YE0013CA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: []
+
+  - name: "YCN001AA"
+    bands:
+      umts: ["B1", "B5", "B6", "B8", "B19"]
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YCN001AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B4", "B5", "B8", "B18", "B19", "B20", "B26", "B28", "B66"]
+      lte_tdd: []
+
+  - name: "YPR00A0AA"
+    bands:
+      umts: ["B1", "B5", "B8"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YPR00A0AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: []
+
+  - name: "YGL001AA"
+    bands:
+      umts: ["B1", "B5", "B8"]
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: ["B38", "B41"]
+
+  - name: "YGL001AA (FDD-LTE Only)"
+    bands:
+      umts: []
+      lte_fdd: ["B1", "B3", "B5", "B8", "B26", "B28"]
+      lte_tdd: []

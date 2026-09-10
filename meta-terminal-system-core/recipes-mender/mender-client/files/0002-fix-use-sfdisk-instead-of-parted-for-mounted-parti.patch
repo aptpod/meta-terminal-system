@@ -1,0 +1,43 @@
+From 966754ba73dfa8e08ed435ab5d0eba0d34885026 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Tue, 23 Dec 2025 19:18:36 +0900
+Subject: [PATCH] fix: use sfdisk instead of parted for mounted partitions
+
+parted fails to resize mounted partitions with interactive prompt
+"Warning: Partition is being used. Are you sure you want to continue?"
+
+Replace parted with sfdisk which can resize mounted partitions
+using --force and --no-reread options.
+
+Upstream-Status: Inappropriate [configuration specific]
+---
+ mender-resize-data-part.sh.in             | 13 +++++--------
+ 1 file changed, 5 insertions(+), 8 deletions(-)
+
+diff --git a/mender-resize-data-part.sh.in b/mender-resize-data-part.sh.in
+index 6b8eb9e..6e9e569 100644
+--- a/mender-resize-data-part.sh.in
++++ b/mender-resize-data-part.sh.in
+@@ -34,14 +34,11 @@ if [ ${free_space} -lt 8196 ]; then
+     exit 0
+ fi
+ 
+-# Parted will refuse to resize the parition because it needs to re-write the
+-# partition table and will refuse to do so unless there is a backup. This
+-# ensures that GPT backup headers are written to the end of the disk.
+-# Note: On some MBR systems using BusyBox's fdisk this call will fail,
+-# this is OK (MBR systems don't have a backup header), always return true. 
+-echo "w" | fdisk ${mender_storage_device} &> /dev/null || true
+-
+-/usr/sbin/parted -s ${mender_storage_device} resizepart @MENDER_DATA_PART_NUMBER@ 100%
++# Use sfdisk instead of parted to support resizing mounted partitions.
++# ",+" means: keep start position, expand to maximum size.
++# --force: Disable all consistency checking (required for mounted partitions).
++# --no-reread: Skip kernel re-read (it fails on mounted devs), let partprobe handle it.
++echo ",+" | sfdisk --force --no-reread -N @MENDER_DATA_PART_NUMBER@ ${mender_storage_device}
+ 
+ # Modifying the partition table in any way may trigger udev at some point.
+ # We don't want to continue right while udev is recreating /dev/disk symlinks.
+-- 
+2.43.0
+

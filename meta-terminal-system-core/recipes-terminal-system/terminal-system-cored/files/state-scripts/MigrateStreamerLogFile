@@ -1,0 +1,46 @@
+#!/bin/sh
+#
+# Migrate streamer.log_file in /var/lib/core/intdash/agent.yaml from empty string to /dev/stdout
+# This script runs during ArtifactInstall_Leave phase (after installation, before reboot)
+#
+
+set -e
+
+AGENT_YAML="/var/lib/core/intdash/agent.yaml"
+
+if [ ! -f "${AGENT_YAML}" ]; then
+    echo "[MigrateStreamerLogFile] agent.yaml not found, skipping migration"
+    exit 0
+fi
+
+# Extract log_file value under the streamer: section only.
+# Stops at the next top-level key (line not starting with whitespace).
+log_file_value=$(awk '
+    /^streamer:/ { in_streamer=1; next }
+    in_streamer && /^[^[:space:]]/ { in_streamer=0 }
+    in_streamer && /^[[:space:]]*log_file:/ { print; exit }
+' "${AGENT_YAML}" | sed 's/.*log_file:[[:space:]]*//' | tr -d "\"' ")
+
+if [ -n "${log_file_value}" ]; then
+    echo "[MigrateStreamerLogFile] streamer.log_file is already set to '${log_file_value}', skipping migration"
+    exit 0
+fi
+
+echo "[MigrateStreamerLogFile] streamer.log_file is empty, migrating to /dev/stdout"
+
+# Replace log_file value with /dev/stdout within the streamer: section only.
+# Use `cp` instead of `mv` to preserve the owner/mode of the original file
+# (the intdash-edge-agent2 container runs as the intdash user and needs write access).
+awk '
+    /^streamer:/ { in_streamer=1; print; next }
+    in_streamer && /^[^[:space:]]/ { in_streamer=0 }
+    in_streamer && /^[[:space:]]*log_file:[[:space:]]*(""|'"'"''"'"')?[[:space:]]*$/ {
+        sub(/log_file:.*$/, "log_file: \"/dev/stdout\"")
+    }
+    { print }
+' "${AGENT_YAML}" > "${AGENT_YAML}.tmp"
+cp "${AGENT_YAML}.tmp" "${AGENT_YAML}"
+rm -f "${AGENT_YAML}.tmp"
+
+echo "[MigrateStreamerLogFile] Migration completed successfully"
+exit 0

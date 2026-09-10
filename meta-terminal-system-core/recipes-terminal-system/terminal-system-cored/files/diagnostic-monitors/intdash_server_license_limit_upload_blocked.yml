@@ -1,0 +1,7 @@
+id: intdash_server_license_limit_upload_blocked
+type: log
+diagnostic_category: alert
+diagnostic_description: "intdash Server %{capture1} license limit exceeded, uploads are paused and retrying, please contact your intdash administrator."
+log_id: system-intdash-edge-agent2-1
+log_regex: 'uploader task executor (?:still )?blocked by intdash Server license limit:.*?kind=([a-z]+)'
+log_expiration: 720

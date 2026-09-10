@@ -1,0 +1,14 @@
+# Sierra Wireless EM-MC74x1 family (qcserial driver, NMEA tty on bInterfaceNumber 02)
+ACTION!="add", GOTO="em74xx_end"
+
+# EM7431
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9091", GOTO="em74xx_gps"
+# EM7430
+SUBSYSTEMS=="usb", ATTRS{idVendor}=="1199", ATTRS{idProduct}=="9071", GOTO="em74xx_gps"
+
+GOTO="em74xx_end"
+
+LABEL="em74xx_gps"
+SUBSYSTEM=="tty", ATTRS{bInterfaceNumber}=="02", SYMLINK+="ttyGPS", TAG+="systemd", ENV{ID_CELLULAR_MODULE}="em74xx"
+
+LABEL="em74xx_end"

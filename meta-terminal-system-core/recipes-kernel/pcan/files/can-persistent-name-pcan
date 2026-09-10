@@ -1,0 +1,46 @@
+#!/bin/sh
+# Generate a persistent CAN interface name for PCAN devices.
+#
+# The proprietary pcan driver registers CAN interfaces as virtual devices,
+# so standard USB sysfs attributes are not directly accessible.
+# Instead, this script uses /sys/class/pcan/ to find device information.
+#
+# Naming: can<devid_hex>i<ctrlr>
+# Uses the PCAN Device ID as-is (default: 0xFFFFFFFF, range: 0-0xFFFFFFFF).
+#
+# Usage: can-persistent-name-pcan <kernel-interface-name>
+# Called by udev PROGRAM directive, outputs the new name to stdout.
+# Exits non-zero if interface is not a PCAN device (falls through to generic rule).
+
+IFACE="$1"
+PCAN_CLASS="/sys/class/pcan"
+
+[ -d "$PCAN_CLASS" ] || exit 1
+
+# Find matching pcan class entry by ndev attribute
+PCAN_DEV=""
+for d in "$PCAN_CLASS"/pcan*; do
+    [ -f "$d/ndev" ] || continue
+    if [ "$(cat "$d/ndev" 2>/dev/null)" = "$IFACE" ]; then
+        PCAN_DEV="$d"
+        break
+    fi
+done
+
+[ -n "$PCAN_DEV" ] || exit 1
+
+CTRLR=$(cat "$PCAN_DEV/ctrlr_number" 2>/dev/null)
+CTRLR=${CTRLR:-0}
+
+DEVID=$(cat "$PCAN_DEV/devid" 2>/dev/null)
+[ -n "$DEVID" ] || { echo "$IFACE"; exit 0; }
+
+DEVID_HEX=$(printf '%x' "$DEVID" 2>/dev/null)
+[ -n "$DEVID_HEX" ] || { echo "$IFACE"; exit 0; }
+
+NAME="can${DEVID_HEX}i${CTRLR}"
+if [ ${#NAME} -le 15 ]; then
+    echo "$NAME"
+else
+    echo "$IFACE"
+fi

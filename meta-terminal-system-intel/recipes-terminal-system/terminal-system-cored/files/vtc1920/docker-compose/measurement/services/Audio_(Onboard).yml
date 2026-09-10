@@ -9,8 +9,9 @@ volumes:
   - /dev:/dev
 command:
     - --config
-    - "/etc/dc_conf/gstreamer_pcm.yml"
+    - "/etc/dc_conf/${DC_PIPELINE_CONFIG_FILE}"
 environment:
+    # gstreamer_pcm.yml
     DC_PCM_SPLIT_FILTER_CONF_PATH: /dev/snd/by-path/pci-0000:00:1f.3
     DC_PCM_SPLIT_FILTER_CONF_DELAY_MS: 0
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_ELEMENT: Mic Jack
@@ -18,10 +19,22 @@ environment:
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_FORMAT: ${DC_AUDIO_FORMAT}
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_RATE: 48000
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_CHANNELS: 1
-    DC_UTILS_ALSA_MIXER_ARGS: "Capture=${DC_AUDIO_VOLUME}%,Mic Boost=${DC_AUDIO_BOOST}%"
     DC_PCM_SPLIT_FILTER_CONF_AUDIO_SYNC_PERIOD_S: ""
+    # gstreamer_rtp_opus.yml
+    DC_RTP_OPUS_AUDIO_DEVICE_PATH: /dev/snd/by-path/pci-0000:00:1f.3
+    DC_ISCP_V2_COMPAT_MODIFY_HEADER_OFFSET_MS: -25
+    DC_RTP_OPUS_AUDIO_ELEMENT: Mic Jack
+    DC_RTP_OPUS_AUDIO_IFACE: card
+    DC_RTP_OPUS_AUDIO_BITRATE: ${DC_BITRATE}
+    DC_RTP_OPUS_AUDIO_BITRATE_TYPE: ${DC_BITRATE_TYPE}
+    DC_RTP_OPUS_AUDIO_FRAME_SIZE: 20
+    DC_RTP_OPUS_AUDIO_CHANNELS: 1
+    DC_ISCP_V2_COMPAT_FILTER_NAME: ${DC_DATA_NAME}
+    # common
+    DC_UTILS_ALSA_MIXER_ARGS: "Capture=${DC_AUDIO_VOLUME}%,Mic Boost=${DC_AUDIO_BOOST}%"
     DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
     DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+    GST_DEBUG: 2
 
 substitution_variables:
     - key: DC_UPSTREAM_FIFO_0
@@ -37,13 +50,52 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_OUTPUT_DATA_TYPE
+      default: 'PCM'
+      presets:
+        - name: 'PCM'
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_pcm.yml
+        - name: 'Opus RTP Packet'
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_rtp_opus.yml
+      display_strings_i18n:
+        - locale: und
+          name: Output Data Type
+          description: 出力データ型
+    - key: DC_DATA_NAME
+      default: ''
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Audio/data_name.sh"
+      cache_key_command: "echo -n Audio-data-name"
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名
     - key: DC_AUDIO_FORMAT
-      default: 'S16LE'
-      options: ['S16LE', 'S32LE', 'F32LE']
+      default: ''
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Audio/audio_format.sh"
+      cache_key_command: "echo -n Audio-audio-format"
       display_strings_i18n:
         - locale: und
           name: Format
-          description: 音声データの形式
+          description: 音声データの形式 ※PCM選択時のみ有効
+    - key: DC_BITRATE
+      default: ''
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Audio/audio_bitrate.sh"
+      cache_key_command: "echo -n Audio-audio-bitrate"
+      display_strings_i18n:
+        - locale: und
+          name: Bitrate
+          description: 音声データのビットレート ※Opus選択時のみ有効
+          unit: bps
+    - key: DC_BITRATE_TYPE
+      default: ''
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Audio/audio_bitrate_type.sh"
+      cache_key_command: "echo -n Audio-audio-bitrate-type"
+      display_strings_i18n:
+        - locale: und
+          name: Bitrate Type
+          description: 音声データのビットレートの種類（cbr:固定ビットレート、vbr:可変ビットレート、constrained-vbr:制約付き可変ビットレート） ※Opus選択時のみ有効
     - key: DC_AUDIO_VOLUME
       default: '100'
       validation: '^([0-9]|[1-9][0-9]|100)$'

@@ -1,0 +1,129 @@
+image: $BASE_URI/$IMAGE_NAME_DEVICE_CONNECTOR:$IMAGE_TAG_DEVICE_CONNECTOR
+restart: unless-stopped
+privileged: true
+depends_on:
+    intdash-edge-agent2:
+        condition: service_healthy
+volumes:
+  - /var/run/core/intdash:/var/run/intdash
+  - /dev:/dev
+command:
+    - --config
+    - "/etc/dc_conf/${DC_PIPELINE_CONFIG_FILE}"
+environment:
+    # gstreamer_h264.yml
+    DC_PROCESS_SRC_CONF_COMMAND: ${DC_GST_PIPELINE}
+    DC_H264_SPLIT_FILTER_CONF_DELAY_MS: ${DC_CODEC_DELAY_MS}
+    DC_H264_SPLIT_FILTER_CONF_FORMAT: iscp_v2_compat
+    # gstreamer_rtp.yml
+    DC_GSTREAMER_SRC_PIPELINE: ${DC_GST_PIPELINE}
+    DC_ISCP_V2_COMPAT_FILTER_NAME: ${DC_DATA_NAME}
+    DC_ISCP_V2_COMPAT_FILTER_MEDIA_TYPE: ${DC_MEDIA_TYPE}
+    DC_ISCP_V2_COMPAT_MODIFY_HEADER_OFFSET: -${DC_CODEC_DELAY_MS}
+    # common
+    DC_PRINT_LOG_FILTER_CONF_TAG: ${DC_TAG}
+    DC_FILE_SINK_CONF_PATH: ${DC_UPSTREAM_FIFO_0}
+    GST_DEBUG: 2
+
+substitution_variables:
+    - key: DC_UPSTREAM_FIFO_0
+      default: ''
+      validation: '^/var/run/intdash/'
+      display_strings_i18n:
+        - locale: und
+          name: FIFO Path
+          description: intdash Edge Agent 2へデータを送信するためのFIFOのパス
+    - key: DC_TAG
+      default: 'EP1-VM01A'
+      display_strings_i18n:
+        - locale: und
+          name: Tag
+          description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_OUTPUT_DATA_TYPE
+      default: 'H.264 RTP Packet (from JPEG)'
+      presets:
+        - name: H.264 Frame (from JPEG)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_h264.yml
+            DC_GST_PIPELINE: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate drop-only=true ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! v4l2jpegdec ! videoflip video-direction=${DC_VIDEOFLIP} ! v4l2h264enc extra-controls='controls,video_bitrate=${DC_BITRATE},h264_i_frame_period=${DC_FPS}' ! 'video/x-h264,profile=main,level=(string)4,stream-format=byte-stream' ! queue ! h264parse ! queue ! fdsink fd=1
+            DC_CODEC_DELAY_MS: 100
+        - name: H.264 Frame (from YUY2)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_h264.yml
+            DC_GST_PIPELINE: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate drop-only=true ! video/x-raw,format=YUY2,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! videoconvert ! videoflip video-direction=${DC_VIDEOFLIP} ! v4l2h264enc extra-controls='controls,video_bitrate=${DC_BITRATE},h264_i_frame_period=${DC_FPS}' ! 'video/x-h264,profile=main,level=(string)4,stream-format=byte-stream' ! queue ! h264parse ! queue ! fdsink fd=1
+            DC_CODEC_DELAY_MS: 200
+        - name: H.264 RTP Packet (from JPEG)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_rtp.yml
+            DC_GST_PIPELINE: v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate drop-only=true ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! v4l2jpegdec ! videoflip video-direction=${DC_VIDEOFLIP} ! v4l2h264enc extra-controls='controls,video_bitrate=${DC_BITRATE},h264_i_frame_period=${DC_FPS}' ! 'video/x-h264,profile=main,level=(string)4,stream-format=byte-stream' ! queue ! h264parse config-interval=-1 ! rtph264pay ! queue ! appsink name=dcsink
+            DC_MEDIA_TYPE: h264
+            DC_CODEC_DELAY_MS: 100
+        - name: H.264 RTP Packet (from YUY2)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_rtp.yml
+            DC_GST_PIPELINE: v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate drop-only=true ! video/x-raw,format=YUY2,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! videoconvert ! videoflip video-direction=${DC_VIDEOFLIP} ! v4l2h264enc extra-controls='controls,video_bitrate=${DC_BITRATE},h264_i_frame_period=${DC_FPS}' ! 'video/x-h264,profile=main,level=(string)4,stream-format=byte-stream' ! queue ! h264parse config-interval=-1 ! rtph264pay ! queue ! appsink name=dcsink
+            DC_MEDIA_TYPE: h264
+            DC_CODEC_DELAY_MS: 200
+        - name: JPEG (Pass-Through)
+          variables:
+            DC_PIPELINE_CONFIG_FILE: gstreamer_jpeg.yml
+            DC_GST_PIPELINE: gst-launch-1.0 -q v4l2src device=${DC_DEVICE_PATH} ! queue ! videorate drop-only=true ! image/jpeg,width=${DC_WIDTH},height=${DC_HEIGHT},framerate=${DC_FPS}/1 ! queue ! fdsink fd=1
+            DC_CODEC_DELAY_MS: 100
+      display_strings_i18n:
+        - locale: und
+          name: Output Data Type
+          description: 出力データ型
+    - key: DC_DATA_NAME
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/data_name.sh"
+      cache_key_command: "echo -n Camera-data-name"
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名
+    - key: DC_DEVICE_PATH
+      default: '/dev/video0'
+      options_script: "/etc/core/docker-compose/measurement/services/Camera/device_path_edgeplant_usb_camera.sh"
+      cache_key_command: "echo -n edgeplant-usb-camera-device-path-$(ls -al /dev/v4l/by-id/* | md5sum -z)"
+      display_strings_i18n:
+        - locale: und
+          name: Device Path
+          description: カメラのデバイスパス
+    - key: DC_WIDTH
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/width_edgeplant_usb_camera.sh"
+      cache_key_command: "echo -n Camera-width-edgeplant-usb-camera"
+      display_strings_i18n:
+        - locale: und
+          name: Width
+          description: 動画の幅
+          unit: pixel
+    - key: DC_HEIGHT
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/height_edgeplant_usb_camera.sh"
+      cache_key_command: "echo -n Camera-height-edgeplant-usb-camera"
+      display_strings_i18n:
+        - locale: und
+          name: Height
+          description: 動画の高さ
+          unit: pixel
+    - key: DC_FPS
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/fps_edgeplant_usb_camera.sh"
+      cache_key_command: "echo -n Camera-fps-edgeplant-usb-camera"
+      display_strings_i18n:
+        - locale: und
+          name: Frame Rate
+          description: フレームレート
+          unit: fps
+    - key: DC_VIDEOFLIP
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/videoflip.sh"
+      cache_key_command: "echo -n Camera-videoflip"
+      display_strings_i18n:
+        - locale: und
+          name: Video Flip
+          description: 回転・反転
+    - key: DC_BITRATE
+      conditional_options_script: "/etc/core/docker-compose/measurement/services/Camera/bitrate_bps.sh"
+      cache_key_command: "echo -n Camera-bitrate-bps"
+      display_strings_i18n:
+        - locale: und
+          name: Bitrate
+          description: ビットレート
+          unit: bps

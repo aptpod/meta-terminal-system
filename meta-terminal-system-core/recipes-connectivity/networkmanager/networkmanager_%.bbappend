@@ -14,7 +14,7 @@ FILES:${PN}:append:mender-image = " \
 
 FILES:${PN}-daemon += "${nonarch_libdir}/tmpfiles.d/networkmanager-state.conf"
 
-PACKAGECONFIG:append = "dhcpcd ppp modemmanager concheck"
+PACKAGECONFIG:append = " dhcpcd ppp modemmanager concheck"
 PACKAGECONFIG:remove = "vala"
 
 # The connectivity-check patch (0001-feat-treat-any-HTTP-response-as-online-when-connecti.patch)
@@ -23,7 +23,7 @@ PACKAGECONFIG:remove = "vala"
 # NetworkManager upgrade fails the build and forces the patch to be re-checked:
 #   1. Re-validate the patch against the new NetworkManager source.
 #   2. Update EXPECT_NM_VERSION to the new version (PV).
-EXPECT_NM_VERSION = "1.46.0"
+EXPECT_NM_VERSION = "1.46.6"
 do_compile:prepend() {
     if [ "${PV}" != "${EXPECT_NM_VERSION}" ]; then
         bbfatal "NetworkManager version changed (${PV} != ${EXPECT_NM_VERSION}). Re-validate the connectivity-check patch and update EXPECT_NM_VERSION."

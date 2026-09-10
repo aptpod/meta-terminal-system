@@ -4,6 +4,7 @@ Before=zabbix-agent2.service
 
 [Service]
 Type=simple
+EnvironmentFile=-/etc/default/device-inventory
 ExecStart=/usr/bin/device-inventory --daemon
 Restart=always
 

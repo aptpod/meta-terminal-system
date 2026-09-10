@@ -1,189 +1,79 @@
-From 381c8003aa57d804b1729fffb9220517ee3ea908 Mon Sep 17 00:00:00 2001
+From 530ce039af09f1d97b889d002c23287bcde0df47 Mon Sep 17 00:00:00 2001
 From: nomoto <nomoto@aptpod.co.jp>
-Date: Tue, 17 Mar 2026 20:23:15 +0900
-Subject: [PATCH] fix: Add connect/handshake/read-header/read-body timeouts to
- prevent reconnection delay
+Date: Thu, 11 Jun 2026 16:29:47 +0900
+Subject: [PATCH] fix: Add connect/handshake/read-header timeouts to prevent
+ reconnection delay
 
-mender-update 4.0.x uses tcp::socket without any timeouts on connect,
-TLS handshake, response header read, or response body read operations.
-When packets are silently dropped (e.g., LTE disconnection), the client
-hangs for ~10 minutes waiting for TCP keep-alive to detect the dead peer.
+mender-update has no timeout on TCP connect, TLS handshake, or response
+header read. When packets are silently dropped (e.g. LTE disconnection)
+on an established connection, the client hangs until TCP keep-alive
+detects the dead peer (~9-10 minutes) before retrying.
 
-Add external timers (events::Timer) to enforce timeouts:
+Bound these phases with the beast::tcp_stream native timer
+(expires_after), the same mechanism mender 5.1.0 already uses for the
+body read:
 - TCP connect: 30s
 - TLS handshake: 30s
 - Response header read: 60s
-- Response body read: 5min (backport from MEN-8717 fix in 5.0.3)
 
-Timeout value rationale:
-- TCP connect normally completes in milliseconds (LAN) to a few
-  seconds (LTE). 30 seconds provides more than 10x margin.
-- TLS handshake normally completes in milliseconds to a few seconds.
-  30 seconds provides more than 10x margin.
-- API response headers normally return within a few seconds. 60
-  seconds provides more than 10x margin.
-- Body read timeout of 5 minutes matches the upstream fix in 5.0.3
-  (MEN-8717) to prevent hanging during artifact download.
-
-WriteHeader and WriteBody timeouts are not changed.
+Connect and TLS handshake normally complete in milliseconds (LAN) to a
+few seconds (LTE); 30s gives >10x margin. Response headers normally
+return within a few seconds; 60s gives >10x margin and replaces the
+~9 minute keep-alive detection. The connect is switched from
+asio::async_connect on the raw socket to beast::tcp_stream::async_connect
+so the stream timer applies. The timer is disarmed (expires_never)
+before request writes and after the header read, leaving WriteHeader,
+WriteBody and the body read (existing 5 minute timeout) unchanged.
 
 Upstream-Status: Inappropriate [configuration specific]
 ---
- src/common/http.hpp                     |  6 +++
- src/common/http/platform/beast/http.cpp | 70 ++++++++++++++++++++++++-
- 2 files changed, 75 insertions(+), 1 deletion(-)
+ src/common/http/platform/beast/http.cpp | 10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-diff --git a/src/common/http.hpp b/src/common/http.hpp
-index 76a79292..042933b1 100644
---- a/src/common/http.hpp
-+++ b/src/common/http.hpp
-@@ -527,6 +527,12 @@ private:
- 
- 	vector<uint8_t> body_buffer_;
- 
-+	// Timer for connect/handshake/read-header timeouts
-+	events::Timer request_timeout_timer_;
-+
-+	// Timer for read timeouts to prevent hanging on connection loss
-+	events::Timer read_timeout_timer_;
-+
- 	asio::ip::tcp::resolver::results_type resolver_results_;
- 
- 	// The reason that these are inside a struct is a bit complicated. We need to deal with what
 diff --git a/src/common/http/platform/beast/http.cpp b/src/common/http/platform/beast/http.cpp
-index 5c1ab6f7..8864b752 100644
+index 6030ea6..e8b344f 100644
 --- a/src/common/http/platform/beast/http.cpp
 +++ b/src/common/http/platform/beast/http.cpp
-@@ -290,7 +290,9 @@ Client::Client(
- 	no_proxy_ {client.no_proxy},
- 	cancelled_ {make_shared<bool>(true)},
- 	resolver_(GetAsioIoContext(event_loop)),
--	body_buffer_(HTTP_BEAST_BUFFER_SIZE) {
-+	body_buffer_(HTTP_BEAST_BUFFER_SIZE),
-+	request_timeout_timer_(event_loop),
-+	read_timeout_timer_(event_loop) {
- }
- 
- Client::~Client() {
-@@ -657,6 +659,20 @@ void Client::ResolveHandler(
+@@ -693,8 +693,8 @@ void Client::ResolveHandler(
  
  	auto &cancelled = cancelled_;
  
-+	// Set timeout to 30 seconds for TCP connection establishment.
-+	// Normal connect completes in milliseconds (LAN) to a few seconds (LTE),
-+	// so 30 seconds provides more than 10x margin.
-+	request_timeout_timer_.AsyncWait(chrono::seconds(30), [this, cancelled](error::Error err) {
-+		if (!*cancelled) {
-+			if (err == error::NoError) {
-+				CallErrorHandler(
-+					error::MakeError(error::GenericError, "TCP connect timed out"),
-+					request_,
-+					header_handler_);
-+			}
-+		}
-+	});
-+
- 	asio::async_connect(
- 		stream_->lowest_layer(),
+-	asio::async_connect(
+-		stream_->lowest_layer(),
++	stream_->next_layer().next_layer().expires_after(chrono::seconds(30));
++	stream_->next_layer().next_layer().async_connect(
  		resolver_results_,
-@@ -685,6 +701,8 @@ void Client::ResolveHandler(
- template <typename StreamType>
- void Client::HandshakeHandler(
- 	StreamType &stream, const error_code &ec, const asio::ip::tcp::endpoint &endpoint) {
-+	request_timeout_timer_.Cancel();
-+
- 	if (ec) {
- 		CallErrorHandler(ec, request_, header_handler_);
- 		return;
-@@ -714,6 +732,20 @@ void Client::HandshakeHandler(
+ 		[this, cancelled](const error_code &ec, const asio::ip::tcp::endpoint &endpoint) {
+ 			if (!*cancelled) {
+@@ -766,6 +766,7 @@ void Client::HandshakeHandler(
  
  	auto &cancelled = cancelled_;
  
-+	// Set timeout to 30 seconds for TLS handshake. Normal TLS handshake
-+	// completes in milliseconds to a few seconds, so 30 seconds provides
-+	// more than 10x margin.
-+	request_timeout_timer_.AsyncWait(chrono::seconds(30), [this, cancelled](error::Error err) {
-+		if (!*cancelled) {
-+			if (err == error::NoError) {
-+				CallErrorHandler(
-+					error::MakeError(error::GenericError, "TLS handshake timed out"),
-+					request_,
-+					header_handler_);
-+			}
-+		}
-+	});
-+
++	stream_->next_layer().next_layer().expires_after(chrono::seconds(30));
  	stream.async_handshake(
  		ssl::stream_base::client, [this, cancelled, endpoint](const error_code &ec) {
  			if (*cancelled) {
-@@ -731,6 +763,8 @@ void Client::HandshakeHandler(
+@@ -783,6 +784,8 @@ void Client::HandshakeHandler(
  
  
  void Client::ConnectHandler(const error_code &ec, const asio::ip::tcp::endpoint &endpoint) {
-+	request_timeout_timer_.Cancel();
++	stream_->next_layer().next_layer().expires_never();
 +
  	if (ec) {
  		CallErrorHandler(ec, request_, header_handler_);
  		return;
-@@ -928,8 +962,24 @@ void Client::ReadHeader() {
+@@ -980,8 +983,11 @@ void Client::ReadHeader() {
  	auto &cancelled = cancelled_;
  	auto &response_data = response_data_;
  
-+	// Set timeout to 60 seconds for reading response headers.
-+	// Normal API responses return headers within a few seconds, so 60 seconds
-+	// provides more than 10x margin. Without this, the client hangs until
-+	// TCP keep-alive detects the dead peer (~10 minutes).
-+	request_timeout_timer_.AsyncWait(chrono::seconds(60), [this, cancelled](error::Error err) {
-+		if (!*cancelled) {
-+			if (err == error::NoError) {
-+				CallErrorHandler(
-+					error::MakeError(error::GenericError, "Response header read timed out"),
-+					request_,
-+					header_handler_);
-+			}
-+		}
-+	});
++	stream_->next_layer().next_layer().expires_after(chrono::seconds(60));
 +
  	auto handler = [this, cancelled, response_data](const error_code &ec, size_t num_read) {
  		if (!*cancelled) {
-+			request_timeout_timer_.Cancel();
++			stream_->next_layer().next_layer().expires_never();
  			ReadHeaderHandler(ec, num_read);
  		}
  	};
-@@ -1125,8 +1175,24 @@ void Client::AsyncReadNextBodyPart(
- 	auto &cancelled = cancelled_;
- 	auto &response_data = response_data_;
- 
-+	// Add a timeout timer to ensure we don't get stuck if we lose connection
-+	read_timeout_timer_.AsyncWait(chrono::minutes(5), [this, cancelled](error::Error err) {
-+		if (!*cancelled) {
-+			if (err != error::NoError) {
-+				if (err.code != make_error_condition(errc::operation_canceled)) {
-+					log::Error("Read timeout timer caused error: " + err.String());
-+					CallErrorHandler(err, request_, body_handler_);
-+				}
-+			} else {
-+				CallErrorHandler(
-+					MakeError(DownloadResumerError, "Read timed out"), request_, body_handler_);
-+			}
-+		}
-+	});
-+
- 	auto async_handler = [this, cancelled, response_data](const error_code &ec, size_t num_read) {
- 		if (!*cancelled) {
-+			read_timeout_timer_.Cancel();
- 			ReadBodyHandler(ec, num_read);
- 		}
- 	};
-@@ -1237,6 +1303,8 @@ void Client::Cancel() {
- 
- void Client::DoCancel() {
- 	resolver_.cancel();
-+	request_timeout_timer_.Cancel();
-+	read_timeout_timer_.Cancel();
- 	if (stream_) {
- 		stream_->lowest_layer().cancel();
- 		stream_->lowest_layer().close();
 -- 
 2.43.0
 

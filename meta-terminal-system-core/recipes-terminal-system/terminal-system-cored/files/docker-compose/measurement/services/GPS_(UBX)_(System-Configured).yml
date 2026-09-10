@@ -33,3 +33,10 @@ substitution_variables:
         - locale: und
           name: Tag
           description: このデバイスコネクターのログメッセージに付与するタグ
+    - key: DC_DATA_NAME
+      default: '<ubx_msg>'
+      options: ['<ubx_msg>']
+      display_strings_i18n:
+        - locale: und
+          name: Data Name
+          description: データ名（UBXメッセージ名）
