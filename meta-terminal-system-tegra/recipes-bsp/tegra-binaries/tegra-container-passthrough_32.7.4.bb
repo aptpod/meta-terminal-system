@@ -28,6 +28,13 @@ SRC_URI[core.sha256sum] = "8659b23489309907f3ac1f19b270306be37f6a4cc5ddac8cb35e9
 do_install() {
     install -d ${D}/usr/lib
     cp -R --preserve=mode,links,timestamps ${S}/usr/lib/aarch64-linux-gnu/* ${D}/usr/lib/
+
+    # Materialize nv libv4l2 plugin symlinks as real files: only `lib` (not subdir `sym`) CSV
+    # entries get remapped into the container's multiarch plugins/nv/ (else nvv4l2* can't load them).
+    for f in ${D}/usr/lib/libv4l/plugins/nv/*.so; do
+        rm $f
+        install -m 0644 ${D}/usr/lib/tegra/$(basename $f) $f
+    done
 }
 
 CONTAINER_CSV_FILES += " \

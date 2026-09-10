@@ -6,6 +6,7 @@ LIC_FILES_CHKSUM = "file://${WORKDIR}/git/LICENSE;md5=efb5d297687a2bee5b634d4cf7
 inherit module
 
 SRC_URI = "${TS_APT_USBTRX_SRC_URI}"
+SRC_URI += "file://0001-fix-netdev-register_candev-netdev-probe.patch;patchdir=${WORKDIR}/git"
 SRCREV = "${TS_APT_USBTRX_SRCREV}"
 PV = "${TS_APT_USBTRX_PV}"
 

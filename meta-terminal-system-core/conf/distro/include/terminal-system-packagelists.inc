@@ -33,6 +33,8 @@ TERMINAL_SYSTEM_BASE = "\
     tree \
     iputils-ping \
     util-linux-hwclock \
+    e2fsprogs-e2fsck \
+    e2fsprogs-dumpe2fs \
     coreutils \
     procps \
     python3-pyserial \

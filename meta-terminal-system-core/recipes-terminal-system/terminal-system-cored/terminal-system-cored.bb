@@ -38,6 +38,7 @@ SRC_URI:append:mender-image = " \
     file://state-scripts/MigrateAPIUsersPasswd \
     file://state-scripts/SetCommitDeviceConnectorsToTrue \
     file://state-scripts/MigrateDCSettingsH264iSCPv2CompatFormat \
+    file://state-scripts/MigrateDhcpcdState \
 "
 
 PV = "${TS_CORED_VERSION}"
@@ -70,6 +71,7 @@ do_compile:append:mender-image() {
     # ArtifactInstall_Leave
     cp ${WORKDIR}/state-scripts/MigrateAPIUsersPasswd ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateAPIUsersPasswd
     cp ${WORKDIR}/state-scripts/SetCommitDeviceConnectorsToTrue ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_SetCommitDeviceConnectorsToTrue
+    cp ${WORKDIR}/state-scripts/MigrateDhcpcdState ${MENDER_STATE_SCRIPTS_DIR}/ArtifactInstall_Leave_30_MigrateDhcpcdState
 }
 
 do_install[network] = "1"
