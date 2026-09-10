@@ -15,9 +15,11 @@ SRC_URI = " \
     file://ts2.fw.apt_usbtrx.conf \
     file://ts2.fw.terminal_display.conf \
     file://ts2.gps.fix.conf \
+    file://ts2.net.if.conf \
     file://zabbix_inventory_apt_usbtrx.sh \
     file://zabbix_inventory_custom.sh \
     file://zabbix_inventory_gps_fix.sh \
+    file://zabbix_inventory_net_if.sh \
     file://zabbix_inventory.yml \
     file://libdc-core.conf \
 "
@@ -97,10 +99,12 @@ RDEPENDS:device-connector-plugins-intdash += " \
 RDEPENDS:device-connector-plugins-zabbix-inventory += " \
     bash \
     coreutils \
+    iproute2 \
     jq \
     libqmi \
     modemmanager \
     usbutils \
+    util-linux-logger \
     zabbix-agent2 \
     libdc-core \
 "

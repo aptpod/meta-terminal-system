@@ -1,0 +1,67 @@
+From 8cb8e658147569447a455f597f528b2e0c677bfd Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Thu, 13 Aug 2026 10:02:08 +0900
+Subject: [PATCH] fix: Do not block the message loop when a late pong arrives
+
+The healthcheck goroutine stops reading MenderShellSession.pong the
+moment it enters the timeout branch of its select, but the session stays
+reachable through MenderShellSessionGetById until MenderShellStopById
+removes it. Removal happens no earlier than four seconds later because
+procps.TerminateAndWait sleeps 2s + 2s unconditionally. A pong that
+arrives in that window finds the session, and HealthcheckPong blocks
+forever on an unbuffered channel that no longer has a reader.
+
+HealthcheckPong is called synchronously from routeMessagePongShell,
+which runs on the daemon's messageLoop goroutine. The block therefore
+stops the whole daemon: it stops reading the websocket, stops logging
+and never reconnects. The process stays alive, so systemd does not
+restart it.
+
+MenderShellStopById also returns without removing the session when
+StopShell fails and the shell process is still alive, which leaves the
+session reachable indefinitely and makes the same block reachable
+without any race.
+
+Give the channel a single slot and make the send non-blocking. A pong
+only signals that the peer is alive, so holding one is enough and
+dropping a second one changes nothing. The buffer keeps a pong that
+arrives while the healthcheck is momentarily outside its select, and the
+default case keeps the sender from blocking once the reader is gone.
+
+Upstream-Status: Pending
+---
+ session/shell.go | 11 +++++++++--
+ 1 file changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/session/shell.go b/session/shell.go
+index 522082e..6e2c4c5 100644
+--- a/session/shell.go
++++ b/session/shell.go
+@@ -160,7 +160,7 @@ func NewMenderShellSession(
+ 		sessionType: ShellInteractiveSession,
+ 		status:      NewSession,
+ 		stop:        make(chan struct{}),
+-		pong:        make(chan struct{}),
++		pong:        make(chan struct{}, 1),
+ 	}
+ 	sessionsMap[sessionId] = s
+ 	sessionsByUserIdMap[userId] = append(sessionsByUserIdMap[userId], s)
+@@ -444,7 +444,14 @@ func (s *MenderShellSession) healthcheckPing() {
+ }
+ 
+ func (s *MenderShellSession) HealthcheckPong() {
+-	s.pong <- struct{}{}
++	// The healthcheck goroutine stops reading this channel once it takes its
++	// timeout branch, but the session can still be looked up for a while, so
++	// a blocking send here could leave the daemon's messageLoop waiting
++	// forever on a late pong.
++	select {
++	case s.pong <- struct{}{}:
++	default:
++	}
+ }
+ 
+ func (s *MenderShellSession) ShellCommand(m *ws.ProtoMsg) error {
+-- 
+2.43.0
+

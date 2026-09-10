@@ -1,5 +1,6 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI:append = " file://mender-connect.conf \
+    file://0001-fix-Do-not-block-the-message-loop-when-a-late-pong-a.patch;patchdir=src/github.com/mendersoftware/mender-connect \
 "
 
 do_install:append() {

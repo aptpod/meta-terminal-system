@@ -1,0 +1,65 @@
+From 870aaf61e243d123b9e4d772d7996f004f218f62 Mon Sep 17 00:00:00 2001
+From: nomoto <nomoto@aptpod.co.jp>
+Date: Fri, 12 Jun 2026 21:44:10 +0900
+Subject: [PATCH] feat: treat any HTTP response as online when connectivity
+ response is *
+
+When the [connectivity] option "response" is set to the special value
+"*", complete the check as FULL as soon as an HTTP status line is
+received, regardless of the status code or the response content (e.g.
+HTTP 400 from an mTLS endpoint accessed without a client certificate).
+A real stale bearer returns no response at all, so it still results in
+LIMITED.
+
+Since this mode does not inspect the response content, the server's
+identity is not checked either: skip the server certificate
+verification only in this mode, so that an untrusted certificate on the
+target does not turn a healthy line into LIMITED. With a non-"*"
+response the verification stays enabled.
+
+Upstream-Status: Inappropriate [Terminal System specific policy]
+---
+ src/core/nm-connectivity.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
+
+diff --git a/src/core/nm-connectivity.c b/src/core/nm-connectivity.c
+index 15dc31a..b944a00 100644
+--- a/src/core/nm-connectivity.c
++++ b/src/core/nm-connectivity.c
+@@ -530,6 +530,14 @@ easy_header_cb(char *buffer, size_t size, size_t nitems, void *userdata)
+         return 0;
+     }
+ 
++    if (nm_streq(_con_config_get_response(cb_data->concheck.con_config), "*")) {
++        /* Treat any HTTP response as online: receiving an HTTP status line
++         * proves the link can carry an HTTP round-trip, regardless of the
++         * status code or the response content. */
++        cb_data_queue_completed(cb_data, NM_CONNECTIVITY_FULL, "any response received", NULL);
++        return 0;
++    }
++
+     if (len >= sizeof(HEADER_STATUS_ONLINE) - 1
+         && !g_ascii_strncasecmp(buffer, HEADER_STATUS_ONLINE, sizeof(HEADER_STATUS_ONLINE) - 1)) {
+         cb_data_queue_completed(cb_data, NM_CONNECTIVITY_FULL, "status header found", NULL);
+@@ -771,6 +779,18 @@ do_curl_request(NMConnectivityCheckHandle *cb_data, const char *hosts)
+     curl_easy_setopt(ehandle, CURLOPT_RESOLVE, cb_data->concheck.hosts);
+     curl_easy_setopt(ehandle, CURLOPT_IPRESOLVE, resolve);
+ 
++    if (nm_streq(_con_config_get_response(cb_data->concheck.con_config), "*")) {
++        /* With response "*" we only check that the link can carry an HTTP
++         * round-trip and do not inspect the response content, so the server's
++         * identity does not matter either. Skip the server certificate
++         * verification so that an untrusted certificate on the target (private
++         * CA, self-signed, expired) does not turn a healthy line into LIMITED.
++         * This does not affect the proxy certificate verification
++         * (CURLOPT_PROXY_SSL_VERIFYPEER). */
++        curl_easy_setopt(ehandle, CURLOPT_SSL_VERIFYPEER, 0L);
++        curl_easy_setopt(ehandle, CURLOPT_SSL_VERIFYHOST, 0L);
++    }
++
+ #if LIBCURL_VERSION_NUM >= 0x075500 /* libcurl 7.85.0 */
+     curl_easy_setopt(ehandle, CURLOPT_PROTOCOLS_STR, "HTTP,HTTPS");
+ #else
+-- 
+2.43.0
+

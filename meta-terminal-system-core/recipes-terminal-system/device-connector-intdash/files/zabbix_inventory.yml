@@ -56,18 +56,6 @@ task:
         value_type: float64
       - key: vfs.fs.size[/data,used]
         value_type: float64
-      - key: net.if.out[wwan0,bytes]
-        value_type: int64
-      - key: net.if.in[wwan0,bytes]
-        value_type: int64
-      - key: net.if.out[eth0,bytes]
-        value_type: int64
-      - key: net.if.in[eth0,bytes]
-        value_type: int64
-      - key: net.if.out[wlan0,bytes]
-        value_type: int64
-      - key: net.if.in[wlan0,bytes]
-        value_type: int64
       - key: net.rtt["ntp.intdash.jp"]
         value_type: float64
       - key: system.hw.devices[usb]
@@ -97,6 +85,8 @@ task:
       - key: ts2.gps.fix
         value_type: json
       - key: ts2.custom[all]
+        value_type: json
+      - key: ts2.net.if
         value_type: json
 $(DC_ZABBIX_SRC_INVENTORY_EXTENSION)
 
@@ -199,60 +189,6 @@ $(DC_ZABBIX_SRC_INVENTORY_EXTENSION)
         value_converters:
         - scaler:
             scale_factor: 0.0009765625
-      - dst_key: ip.wwan0.stats64.tx.bytes
-        src_key: '"net.if.out[wwan0,bytes]"'
-      - dst_key: ip.wwan0.stats64.rx.bytes
-        src_key: '"net.if.in[wwan0,bytes]"'
-      - dst_key: ip.eth0.stats64.tx.bytes
-        src_key: '"net.if.out[eth0,bytes]"'
-      - dst_key: ip.eth0.stats64.rx.bytes
-        src_key: '"net.if.in[eth0,bytes]"'
-      - dst_key: ip.wlan0.stats64.tx.bytes
-        src_key: '"net.if.out[wlan0,bytes]"'
-      - dst_key: ip.wlan0.stats64.rx.bytes
-        src_key: '"net.if.in[wlan0,bytes]"'
-      - dst_key: ip.wwan0.stats64.tx.bps
-        src_key: '"net.if.out[wwan0,bytes]"'
-        value_converters:
-        - scaler:
-            scale_factor: 8
-        - change_per_interval:
-            interval_sec: 1
-      - dst_key: ip.wwan0.stats64.rx.bps
-        src_key: '"net.if.in[wwan0,bytes]"'
-        value_converters:
-        - scaler:
-            scale_factor: 8
-        - change_per_interval:
-            interval_sec: 1
-      - dst_key: ip.eth0.stats64.tx.bps
-        src_key: '"net.if.out[eth0,bytes]"'
-        value_converters:
-        - scaler:
-            scale_factor: 8
-        - change_per_interval:
-            interval_sec: 1
-      - dst_key: ip.eth0.stats64.rx.bps
-        src_key: '"net.if.in[eth0,bytes]"'
-        value_converters:
-        - scaler:
-            scale_factor: 8
-        - change_per_interval:
-            interval_sec: 1
-      - dst_key: ip.wlan0.stats64.tx.bps
-        src_key: '"net.if.out[wlan0,bytes]"'
-        value_converters:
-        - scaler:
-            scale_factor: 8
-        - change_per_interval:
-            interval_sec: 1
-      - dst_key: ip.wlan0.stats64.rx.bps
-        src_key: '"net.if.in[wlan0,bytes]"'
-        value_converters:
-        - scaler:
-            scale_factor: 8
-        - change_per_interval:
-            interval_sec: 1
       - dst_key: ping.round_trip_ms_avg
         src_key: '"net.rtt["ntp.intdash.jp"]"'
       - dst_key: lsusb
@@ -313,6 +249,8 @@ $(DC_ZABBIX_SRC_INVENTORY_EXTENSION)
         src_key: '"ts2.gps.fix"'
       - dst_key: custom
         src_key: '"ts2.custom[all]"'
+      - dst_key: ip
+        src_key: '"ts2.net.if"'
 $(DC_JSON_CONDITIONAL_AGGREGATE_FILTER_CONVERTER_EXTENSION)
 
   - id: 3

@@ -288,6 +288,30 @@ class TestTerminalSystemConfig(unittest.TestCase):
         self.__get_requests_list(configs_current.copy(), configs_mender.copy(), False, expected_force_false)
         self.__get_requests_list(configs_current.copy(), configs_mender.copy(), True, expected_force_true)
 
+    def test_get_requests_list_put_dict(self):
+        configs_current = {
+            "network.connectivity_check": {"uri": ""}
+        }
+        configs_mender = {
+            "network.connectivity_check": {"uri": "https://example.com/check"}
+        }
+        expected = {
+            "post": [],
+            "patch": [],
+            "put": [
+                RequestsItem(
+                    url="http://localhost:8081/api/network/connectivity_check",
+                    data={"uri": "https://example.com/check"},
+                    needs_reboot=False,
+                    needs_additional_post=False,
+                    additional_post_endpoint="http://localhost:8081/apiNone",
+                )
+            ],
+            "delete": [],
+        }
+
+        self.__get_requests_list(configs_current.copy(), configs_mender.copy(), False, expected)
+
     @patch('terminal_system_config.print')
     @patch('terminal_system_config.args')
     def test_list_keys(self, mock_args, mock_print):
@@ -315,6 +339,7 @@ class TestTerminalSystemConfig(unittest.TestCase):
             "gps",
             "ip_allowlist",
             "diagnostic_monitors",
+            "network.connectivity_check",
             "docker.composes"
         ]
 

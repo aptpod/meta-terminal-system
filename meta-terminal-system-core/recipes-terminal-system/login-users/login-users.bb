@@ -16,15 +16,13 @@ PR = "r0"
 
 inherit useradd mender-state-scripts
 
-DEPENDS += " docker-moby "
-
 USER_ADMIN = "admin"
 # maint user can only connected via remote ssh tunnel (see 'sshd_config' modified by openssh_%.bbappend)
 USER_MAINT = "maint"
 USERADD_PACKAGES = "${PN}"
 USERADD_PARAM:${PN} = " \
-    -G adm,audio,video,docker ${USER_ADMIN}; \
-    -G adm,audio,video,docker ${USER_MAINT}; \
+    -G adm,audio,video ${USER_ADMIN}; \
+    -G adm,audio,video ${USER_MAINT}; \
     user \
 "
 

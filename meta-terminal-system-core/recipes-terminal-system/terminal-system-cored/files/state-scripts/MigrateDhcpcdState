@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# Migrate dhcpcd state (DUID/lease) to the data partition
+# This script runs during ArtifactInstall_Leave phase (after installation, before reboot)
+# The new image bind-mounts /var/lib/dhcpcd from /data/var/lib/dhcpcd; copying the
+# state of the running OS here keeps the DHCP client-id and the leased IP address
+# across the update.
+#
+
+set -e
+
+SRC="/var/lib/dhcpcd"
+DST="/data/var/lib/dhcpcd"
+
+# Skip if already bind-mounted (updating from an image that persists dhcpcd state).
+# Copying would fail with "same file" and abort the update.
+if grep -q " ${SRC} " /proc/mounts; then
+    exit 0
+fi
+
+if [ -d "${SRC}" ]; then
+    echo "Migrating dhcpcd state from ${SRC} to ${DST}"
+    mkdir -p "${DST}"
+    cp -pR "${SRC}/." "${DST}/"
+    # Normalize to root:root: uids of the running OS do not necessarily
+    # exist in the new image (Yocto assigns dynamic uids per build)
+    chown -R root:root "${DST}"
+    # Match the mode the dhcpcd package ships for its dbdir
+    chmod 700 "${DST}"
+    echo "Migration completed successfully"
+fi
+
+exit 0
