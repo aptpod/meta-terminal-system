@@ -255,6 +255,11 @@ class TerminalSystemCoreUtils:
             "/diagnostic_monitors",
             ModifyMethod.PUT,
         )
+        self.api_list.append(
+            "network.connectivity_check",
+            "/network/connectivity_check",
+            ModifyMethod.PUT,
+        )
         self.api_list.append("docker.composes", "/docker/composes", ModifyMethod.PATCH)
 
     def __get_id(self, d):

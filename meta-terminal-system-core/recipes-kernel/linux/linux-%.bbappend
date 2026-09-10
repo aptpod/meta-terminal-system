@@ -14,8 +14,5 @@ SRC_URI:append = " \
     ${@if_kernel_recipe('file://apt-usbtrx.cfg', '', d)} \
     ${@if_kernel_recipe('file://joystick.cfg', '', d)} \
     ${@if_kernel_recipe('file://0001-fix-uvc-max-payload-transfer-size-for-edgeplant-usb-camera.patch', '', d)} \
-"
-# Remove patch as it has already been applied in meta-edgeplant
-SRC_URI:remove:jasmine = " \
-    ${@if_kernel_recipe('file://0001-fix-uvc-max-payload-transfer-size-for-edgeplant-usb-camera.patch', '', d)} \
+    ${@if_kernel_recipe('file://0001-disable-usb3-u1u2-lpm.patch', '', d)} \
 "

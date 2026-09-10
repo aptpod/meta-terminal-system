@@ -7,7 +7,7 @@ depends_on:
         condition: service_healthy
 volumes:
   - /var/run/core/intdash:/var/run/intdash
-  - /tmp/argus_socket:/tmp/argus_socket # To avoid error on gstreamer. see, https://git.aptpod.co.jp/intdash-terminal-system/os/-/issues/34#note_757982
+  - /tmp/argus_socket:/tmp/argus_socket # gstreamer fails to open the camera without the Argus daemon socket
   - /etc/enctune.conf:/etc/enctune.conf # To enable omxh264enc. see, https://aptpod-jp.atlassian.net/wiki/spaces/INTDASHCORE/pages/1074169039/Docker+T1
   - /dev:/dev
 command:

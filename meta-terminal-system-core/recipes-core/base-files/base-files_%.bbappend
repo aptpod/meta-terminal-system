@@ -1,6 +1,8 @@
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
-SRC_URI:append:mender-image = "file://InstallLoginUsersWorkdir"
+SRC_URI += "file://90-terminal-system-path.sh"
+
+SRC_URI:append:mender-image = " file://InstallLoginUsersWorkdir"
 
 inherit mender-state-scripts
 
@@ -39,5 +41,16 @@ do_install:append() {
     echo "# bind mount of data partition" >> ${D}${sysconfdir}/fstab
     printf "%-20s %-20s %-10s %-21s %-2s %s\n" /data/var/cache /var/cache none bind,x-systemd.requires-mounts-for=/data 0 0 >> ${D}${sysconfdir}/fstab
     printf "%-20s %-20s %-10s %-21s %-2s %s\n" /data/var/log   /var/log   none bind,x-systemd.requires-mounts-for=/data,x-systemd.before=systemd-journald.service,x-systemd.before=systemd-update-utmp.service 0 0 >> ${D}${sysconfdir}/fstab
+    # Persist dhcpcd state (DUID/lease) on /data so the DHCP client-id survives
+    # reboots and OTA updates. Not in do_install_bind_mount_var_lib (SD/SSD
+    # machines override it); the mount point is shipped by the dhcpcd package.
+    printf "%-20s %-20s %-10s %-21s %-2s %s\n" /data/var/lib/dhcpcd /var/lib/dhcpcd none bind,x-systemd.requires-mounts-for=/data 0 0 >> ${D}${sysconfdir}/fstab
+    # Persist NetworkManager state (secret_key) on /data so the IPv6
+    # stable-privacy address survives reboots and OTA updates. Same placement
+    # rationale as dhcpcd above; the mount point is shipped by networkmanager-daemon.
+    printf "%-20s %-20s %-10s %-21s %-2s %s\n" /data/var/lib/NetworkManager /var/lib/NetworkManager none bind,x-systemd.requires-mounts-for=/data 0 0 >> ${D}${sysconfdir}/fstab
     do_install_bind_mount_var_lib
+
+    install -d ${D}${sysconfdir}/profile.d
+    install -m 0644 ${WORKDIR}/90-terminal-system-path.sh ${D}${sysconfdir}/profile.d/
 }

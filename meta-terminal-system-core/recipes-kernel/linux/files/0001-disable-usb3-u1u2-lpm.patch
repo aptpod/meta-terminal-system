@@ -1,0 +1,40 @@
+Upstream-Status: Inappropriate [configuration specific]
+
+usb: core: disable USB3 U1/U2 LPM system-wide
+
+On EDGEPLANT T1 the USB3.0 links behind the internal TUSB8041 hub fail to
+recover from the U1/U2 low-power link states while idle, which triggers a
+disconnect and re-enumeration of the whole USB3.0 bus. The hub IC register
+(u1u2Disable) cannot be set because the SMBus is not wired on the T1 board,
+so U1/U2 has to be disabled on the host (kernel) side.
+
+usb_device_supports_lpm() is the single gate that decides whether the kernel
+programs U1/U2 timeouts and allows device-initiated LPM. Reporting no LPM for
+any SuperSpeed-or-faster device disables U1/U2 regardless of the device
+VID:PID or host controller. USB 2.0 (High-Speed and below) LPM (L1) and
+runtime autosuspend (U3) are not affected.
+
+The failure has only been observed on the T1, but U1/U2 is a host- and
+device-independent USB3 mechanism, so the patch is applied to all supported
+devices as a precaution.
+
+The hunk is anchored at the function signature so the single patch applies
+unchanged to every target kernel tree (4.9 through 6.18).
+---
+diff --git a/drivers/usb/core/hub.c b/drivers/usb/core/hub.c
+index 2bd0eb7a6e3a..b28d4a82cb3d 100644
+--- a/drivers/usb/core/hub.c
++++ b/drivers/usb/core/hub.c
+@@ -132,4 +132,12 @@ EXPORT_SYMBOL(usb_hub_to_struct_hub);
+ int usb_device_supports_lpm(struct usb_device *udev)
+ {
++	/* Disable USB3 (SuperSpeed+) U1/U2 LPM system-wide: a failed U1/U2
++	 * exit disconnects the whole USB3 bus. Observed on EDGEPLANT T1
++	 * (TUSB8041 hub; SMBus is unwired, so the hub-side u1u2Disable is
++	 * unreachable). Applied on all boards as a precaution because U1/U2
++	 * is host-controller and device independent. */
++	if (udev->speed >= USB_SPEED_SUPER)
++		return 0;
++
+ 	/* Some devices have trouble with LPM */
+ 	if (udev->quirks & USB_QUIRK_NO_LPM)
