@@ -1,0 +1,46 @@
+#!/bin/sh
+# The fake fw_setenv shim on cboot Tegra ignores mender_boot_part.
+# Use the slot recorded before bl-update for rollback before or after reboot.
+
+set -e
+
+RECORD=/var/lib/mender/tegra-rollback-slot
+
+fail() {
+    echo "ERR: $*" >&2
+    if mv -f "$RECORD" "${RECORD}.failed"; then
+        echo "Saved rollback record to ${RECORD}.failed"
+    else
+        echo "ERR: could not save rollback record to ${RECORD}.failed" >&2
+    fi
+    exit 1
+}
+
+[ -e "$RECORD" ] || { echo "No rollback record; nothing to restore"; exit 0; }
+slot=$(cat "$RECORD") || fail "could not read rollback record"
+case "$slot" in
+    0|1) ;;
+    *) fail "invalid rollback boot slot: $slot" ;;
+esac
+
+current=$(tegra-boot-control --current-slot) || fail "tegra-boot-control --current-slot failed"
+case "$current" in
+    0|1) ;;
+    *) fail "invalid current boot slot: $current" ;;
+esac
+tegra-boot-control --set-active "$slot" || fail "tegra-boot-control --set-active $slot failed"
+# --set-active exits 0 even when the SMD write was skipped, so verify via --status
+status=$(tegra-boot-control --status) || fail "tegra-boot-control --status failed"
+echo "$status"
+if ! printf '%s\n' "$status" | grep -q "^Slot $slot: priority: 15,"; then
+    fail "rollback boot slot $slot does not have priority 15"
+fi
+echo "Verified rollback boot slot $slot has priority 15"
+
+# --set-active clears "successful" on the target slot; restore it only when the running slot was re-activated
+if [ "$slot" = "$current" ]; then
+    tegra-boot-control --mark-successful || fail "tegra-boot-control --mark-successful failed"
+fi
+rm -f "$RECORD"
+echo "Restored boot slot $slot for next boot and removed rollback record"
+exit 0
