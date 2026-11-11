@@ -9,3 +9,8 @@ def if_kernel_recipe(if_true, if_false, d):
 SRC_URI:append:vtc1920 = " \
     ${@if_kernel_recipe('file://onboard-can.cfg', '', d)} \
 "
+
+# The fix is in linux 6.6.157
+SRC_URI:append:vtc1920 = " \
+    ${@if_kernel_recipe('file://0001-CVE-2026-90110-inetpeer-randomize-RB-tree-node-comparison-using-SipHash.patch', '', d)} \
+"
