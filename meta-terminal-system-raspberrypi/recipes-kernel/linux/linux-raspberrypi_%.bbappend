@@ -4,3 +4,8 @@ FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI:append = " \
     file://0001-CVE-2026-64125-net-bcmgenet-keep-RBUF-EEE-PM-disabled.patch \
 "
+
+# The fix is in linux 6.6.141
+SRC_URI:append = " \
+    file://0001-CVE-2026-53088-bcmgenet-fix-txcb-rewind.patch \
+"
