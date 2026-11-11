@@ -1,0 +1,21 @@
+Blacklist "emSign ECC Root CA - G3" and "Comodo AAA Services root"
+
+The private keys of eMudhra intermediate CAs chaining to these roots were
+compromised. Same blacklist entries as Debian ca-certificates
+20260816+nmu1, but inserted after the header comment instead of after the
+DigiNotar entries so that the same hunk applies to 20211016.
+
+Upstream-Status: Backport [https://bugs.debian.org/1151413]
+
+--- a/mozilla/blacklist.txt
++++ b/mozilla/blacklist.txt
+@@ -1,4 +1,9 @@
+ # One blacklist entry per line, corresponding to the label in certdata.txt.
+ 
++# Blacklist "emSign ECC Root CA - G3" (cf. #1151413)
++"emSign ECC Root CA - G3"
++# Blacklist "Comodo AAA Services root" (cf. #1151413)
++"Comodo AAA Services root"
++
+ # Blacklist explicitly distrusted certificates to explicitly ignore them and prevent build errors
+ "Explicitly Distrust DigiNotar Root CA"

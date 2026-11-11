@@ -1,0 +1,6 @@
+#!/bin/sh
+
+RECORD=/var/lib/mender/tegra-rollback-slot
+
+rm -f "$RECORD"
+exit 0

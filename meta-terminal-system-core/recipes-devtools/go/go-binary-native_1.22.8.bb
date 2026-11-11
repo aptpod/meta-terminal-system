@@ -17,6 +17,9 @@ UPSTREAM_CHECK_URI = "https://golang.org/dl/"
 UPSTREAM_CHECK_REGEX = "go(?P<pver>\d+(\.\d+)+)\.linux"
 
 CVE_PRODUCT = "golang:go"
+# Prebuilt toolchain used only on the build host (bootstrap and native tools); the
+# compiler fix is applied to go-cross and go-runtime through go-1.22.8.inc.
+CVE_CHECK_IGNORE += "CVE-2026-27143"
 
 S = "${WORKDIR}/go"
 
