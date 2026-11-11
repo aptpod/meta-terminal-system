@@ -1,0 +1,23 @@
+#!/bin/sh
+# The fake fw_setenv shim on cboot Tegra ignores mender_boot_part.
+# Record the old slot before bl-update: rollback can run before or after reboot.
+
+set -e
+
+RECORD=/var/lib/mender/tegra-rollback-slot
+
+slot=$(tegra-boot-control --current-slot)
+case "$slot" in
+    0|1) ;;
+    *) echo "ERR: invalid current boot slot: $slot" >&2; exit 1 ;;
+esac
+
+tmp=$(mktemp "${RECORD}.XXXXXX")
+trap 'rm -f "$tmp"' EXIT
+printf '%s' "$slot" > "$tmp"
+chmod 0644 "$tmp"
+sync
+mv -f "$tmp" "$RECORD"
+sync
+echo "Recorded rollback boot slot: $slot"
+exit 0
